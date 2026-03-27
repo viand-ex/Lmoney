@@ -590,7 +590,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.1.5 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.0 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -694,7 +694,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Данные</div><ul class="ll"><li>Telegram ID, имя, аватар</li><li>История транзакций и участий</li></ul>
     <div class="lh2">Использование</div><ul class="ll"><li>Ведение аккаунта и розыгрыши</li><li>Безопасность и антифрод</li></ul>
     <div class="lh2">Хранение</div><div class="lp">Защищённые серверы. Данные не продаются третьим лицам.</div>
-    <div class="lh2">Контакт</div><div class="lp">privacy@lmoney.app</div>
+    <div class="lh2">Контакт</div><div class="lp"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5626243f2037352f163a3b3938332f78372626">[email&#160;protected]</a></div>
     <button class="btn bp" onclick="closeModal('privacy')">Понятно</button>
   </div>
 </div>
@@ -717,7 +717,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Когда зачислят выигрыш?</div><div class="lp">В течение 5 минут. Вывод сразу.</div>
     <div class="lh2">Что такое авто-участие?</div><div class="lp">−1 USDT с баланса ежедневно автоматически.</div>
     <div class="lh2">Комиссия за вывод?</div><div class="lp">Платформа 0. TRC-20 ≈ 1 USDT, TON ≈ 0.01–0.05 TON.</div>
-    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · support@lmoney.app</div>
+    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bfcccacfcfd0cdcbffd3d2d0d1dac691decfcf">[email&#160;protected]</a></div>
     <button class="btn bp" onclick="closeModal('faq')">Закрыть</button>
   </div>
 </div>
@@ -773,6 +773,20 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
 <script>
 (function(){
 'use strict';
+
+// ── API CONFIG ────────────────────────────────────────
+var API = 'https://lmoney-backend-production.up.railway.app';
+var authToken = localStorage.getItem('lm_token') || null;
+
+async function apiCall(method, path, body) {
+  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  if(authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  if(body) opts.body = JSON.stringify(body);
+  try {
+    var r = await fetch(API + path, opts);
+    return await r.json();
+  } catch(e) { return { error: 'Network error' }; }
+}
 
 // ── STATE ──────────────────────────────────────────────
 var bal = 47.50;
@@ -889,27 +903,57 @@ window.openModal = function(id){
 window.closeModal = function(id){ var m=document.getElementById('m-'+id); if(m) m.classList.remove('open'); };
 
 // ── BUY TICKET ────────────────────────────────────────
-window.buyTicket = function(){
+window.buyTicket = async function(){
   if(window.hasTicket){ showToast('Ты уже участвуешь сегодня!'); return; }
+
+  var btn = document.getElementById('buy-btn');
+  btn.textContent = '⏳ Регистрируем...';
+  btn.disabled = true;
+
+  // Try real API
+  var result = await apiCall('POST', '/ticket/buy');
+
+  btn.disabled = false;
+
+  if(result.error){
+    if(result.error === 'Insufficient balance'){
+      showToast('Недостаточно средств. Пополни баланс!');
+      btn.textContent = '🎯 Участвовать в розыгрыше';
+      showScr('wallet');
+      setTimeout(function(){ openModal('deposit'); }, 400);
+      return;
+    }
+    if(result.error === 'Already participating today'){
+      showToast('Ты уже участвуешь сегодня!');
+      return;
+    }
+    // Fallback — demo mode
+    console.log('API unavailable, demo mode');
+  }
+
   window.hasTicket = true;
 
-  // Deduct balance
-  bal = Math.max(0, bal - 1);
+  var n, newBal;
+  if(result.ticket_number){
+    n = result.ticket_number;
+    newBal = result.new_balance;
+    if(result.draw) updateStats(result.draw.total_tickets);
+  } else {
+    // Demo fallback
+    var tc = document.getElementById('tcnt');
+    n = parseInt(tc.textContent) + 1;
+    tc.textContent = n;
+    updateStats(n);
+    newBal = bal - 1;
+  }
+
+  bal = Math.max(0, newBal !== undefined ? newBal : bal - 1);
   updateBalUI();
 
-  // Update counters
-  var tc = document.getElementById('tcnt');
-  var n = parseInt(tc.textContent) + 1;
-  tc.textContent = n;
-  updateStats(n);
-
-  // Show ticket
   var tn = document.getElementById('ticket-num'); if(tn) tn.textContent = '#'+n;
   var ts = document.getElementById('tbox-sub'); if(ts) ts.textContent = 'Баланс: '+bal.toFixed(2)+' USDT';
   document.getElementById('tbox').style.display = 'flex';
 
-  // Change button
-  var btn = document.getElementById('buy-btn');
   btn.textContent = '✓ Ты участвуешь';
   btn.classList.add('participated');
 
@@ -1020,13 +1064,16 @@ window.sendGift = function(){
 
 // ── TOAST ─────────────────────────────────────────────
 var toastT;
-window.saveNick = function(){
+window.saveNick = async function(){
   var input = document.getElementById('nick-input');
   var val = input.value.trim();
   var s = getStored() || {};
   s.nick = val;
   setStored(s);
-  // Update display name in profile - show nick, fallback to tg name, then lmId
+
+  // Try API update
+  apiCall('PATCH', '/me', { nick: val });
+
   var displayName = val || s.name || s.lmId || 'Пользователь';
   var pn = document.getElementById('prof-name');
   if(pn) pn.textContent = displayName;
@@ -1136,16 +1183,4 @@ function spawnConfetti(){
     s.style.background=colors[Math.floor(Math.random()*colors.length)];
     s.style.animationDuration=(Math.random()*2+1.5)+'s';
     s.style.animationDelay=(Math.random()*2)+'s';
-    var sz=(Math.random()*6+4)+'px';
-    s.style.width=s.style.height=sz;
-    s.style.borderRadius=Math.random()>0.5?'50%':'2px';
-    c.appendChild(s);
-  }
-}
-// Demo: press D to trigger draw result
-document.addEventListener('keydown',function(e){ if((e.key==='d'||e.key==='D')&&window.hasTicket) showDrawResult(); });
-
-})();
-</script>
-</body>
-</html>
+ 
