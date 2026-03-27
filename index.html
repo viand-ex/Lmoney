@@ -694,7 +694,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Данные</div><ul class="ll"><li>Telegram ID, имя, аватар</li><li>История транзакций и участий</li></ul>
     <div class="lh2">Использование</div><ul class="ll"><li>Ведение аккаунта и розыгрыши</li><li>Безопасность и антифрод</li></ul>
     <div class="lh2">Хранение</div><div class="lp">Защищённые серверы. Данные не продаются третьим лицам.</div>
-    <div class="lh2">Контакт</div><div class="lp"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5626243f2037352f163a3b3938332f78372626">[email&#160;protected]</a></div>
+    <div class="lh2">Контакт</div><div class="lp">privacy@lmoney.app</div>
     <button class="btn bp" onclick="closeModal('privacy')">Понятно</button>
   </div>
 </div>
@@ -717,7 +717,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Когда зачислят выигрыш?</div><div class="lp">В течение 5 минут. Вывод сразу.</div>
     <div class="lh2">Что такое авто-участие?</div><div class="lp">−1 USDT с баланса ежедневно автоматически.</div>
     <div class="lh2">Комиссия за вывод?</div><div class="lp">Платформа 0. TRC-20 ≈ 1 USDT, TON ≈ 0.01–0.05 TON.</div>
-    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bfcccacfcfd0cdcbffd3d2d0d1dac691decfcf">[email&#160;protected]</a></div>
+    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · support@lmoney.app</div>
     <button class="btn bp" onclick="closeModal('faq')">Закрыть</button>
   </div>
 </div>
@@ -773,20 +773,6 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
 <script>
 (function(){
 'use strict';
-
-// ── API CONFIG ────────────────────────────────────────
-var API = 'https://lmoney-backend-production.up.railway.app';
-var authToken = localStorage.getItem('lm_token') || null;
-
-async function apiCall(method, path, body) {
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-  if(authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
-  if(body) opts.body = JSON.stringify(body);
-  try {
-    var r = await fetch(API + path, opts);
-    return await r.json();
-  } catch(e) { return { error: 'Network error' }; }
-}
 
 // ── STATE ──────────────────────────────────────────────
 var bal = 47.50;
@@ -911,7 +897,7 @@ window.buyTicket = async function(){
   btn.disabled = true;
 
   // Try real API
-  var result = await apiCall('POST', '/ticket/buy');
+  var result = await api('POST', '/ticket/buy');
 
   btn.disabled = false;
 
@@ -1072,7 +1058,7 @@ window.saveNick = async function(){
   setStored(s);
 
   // Try API update
-  apiCall('PATCH', '/me', { nick: val });
+  api('PATCH', '/me', { nick: val });
 
   var displayName = val || s.name || s.lmId || 'Пользователь';
   var pn = document.getElementById('prof-name');
@@ -1183,4 +1169,16 @@ function spawnConfetti(){
     s.style.background=colors[Math.floor(Math.random()*colors.length)];
     s.style.animationDuration=(Math.random()*2+1.5)+'s';
     s.style.animationDelay=(Math.random()*2)+'s';
- 
+    var sz=(Math.random()*6+4)+'px';
+    s.style.width=s.style.height=sz;
+    s.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    c.appendChild(s);
+  }
+}
+// Demo: press D to trigger draw result
+document.addEventListener('keydown',function(e){ if((e.key==='d'||e.key==='D')&&window.hasTicket) showDrawResult(); });
+
+})();
+</script>
+</body>
+</html>
