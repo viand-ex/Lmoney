@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lmoney</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── VARIABLES ─────────────────────────────────────── */
+:root{
+  --bg:#f5f3ef;--bg2:#eceae4;--bg3:#e2dfd8;
+  --card:#ffffff;--border:#dedad2;
+  --text:#1a1815;--text2:#6b6760;--text3:#9b9891;
+  --accent:#c8f135;--accent2:#a8d020;--adark:#2d3a00;
+  --gold:#f0b429;--goldbg:#fffbeb;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --r:20px;--rs:14px;
+}
+.dark{
+  --bg:#0f0f0d;--bg2:#161613;--bg3:#222220;
+  --card:#1a1a16;--border:#2e2e28;
+  --text:#f0ede6;--text2:#9a9790;--text3:#6a6760;
+  --adark:#c8f135;--goldbg:#1c1400;
+}
+/* ── RESET ──────────────────────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:#0a0a08;}
+body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;transition:color .3s;}
+
+/* ── FRAME ──────────────────────────────────────────── */
+.frame{
+  width:100%;max-width:390px;height:100vh;max-height:844px;
+  background:var(--bg);display:flex;flex-direction:column;
+  position:relative;overflow:hidden;transition:background .3s;
+}
+@media(min-width:430px){
+  .frame{border-radius:44px;height:844px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.15),0 40px 100px rgba(0,0,0,.6);}
+}
+
+/* ── AUTH ───────────────────────────────────────────── */
+.auth{
+  position:absolute;inset:0;z-index:20;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px 40px;text-align:center;
+  background:var(--bg);overflow-y:auto;transition:background .3s;
+}
+.auth.hide{display:none;}
+.auth-logo{font-size:42px;font-weight:800;letter-spacing:-2px;margin-bottom:8px;color:var(--text);}
+.auth-logo em{color:var(--accent2);font-style:normal;}
+.auth-tag{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:28px;}
+.auth-vis{width:96px;height:96px;border-radius:24px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:46px;margin:0 auto 28px;}
+.auth-btn{
+  width:100%;padding:16px;border:none;border-radius:var(--rs);
+  background:#229ED9;color:#fff;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:10px;transition:background .2s;
+}
+.auth-btn:hover{background:#1a8bc0;}
+.auth-note{font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:14px;font-family:'DM Mono',monospace;}
+.agree-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--rs);cursor:pointer;text-align:left;width:100%;
+}
+.agree-box{
+  width:20px;height:20px;border-radius:6px;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;transition:all .2s;font-size:11px;font-weight:800;color:var(--adark);
+}
+.agree-box.on{background:var(--accent);border-color:var(--accent2);}
+.agree-txt{font-size:11px;color:var(--text2);line-height:1.55;}
+.agree-txt a{color:var(--accent2);text-decoration:underline;}
+
+/* ── APP ────────────────────────────────────────────── */
+.app{
+  position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);transition:background .3s;
+}
+.app.show{display:flex;}
+
+/* ── TOPBAR ─────────────────────────────────────────── */
+.tbar{display:flex;align-items:center;justify-content:space-between;padding:18px 18px 12px;flex-shrink:0;}
+.logo{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--text);}
+.logo em{color:var(--accent2);font-style:normal;}
+.balchip{display:flex;align-items:center;gap:5px;padding:7px 12px;
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  cursor:pointer;transition:background .2s;}
+.balchip:hover{background:var(--bg3);}
+.balchip-l{font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;}
+.balchip-v{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+
+/* ── CONTENT ────────────────────────────────────────── */
+.content{flex:1;overflow-y:auto;padding:0 16px 90px;scrollbar-width:none;}
+.content::-webkit-scrollbar{display:none;}
+.scr{display:none;}
+.scr.on{display:block;animation:fup .22s ease;}
+@keyframes fup{from{opacity:0;transform:translateY(7px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── BOTTOM NAV ─────────────────────────────────────── */
+.bnav{
+  position:absolute;bottom:0;left:0;right:0;
+  background:var(--card);border-top:1px solid var(--border);
+  display:flex;padding:8px 0 16px;z-index:20;
+}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer;color:var(--text3);transition:color .2s;}
+.ni.on{color:var(--text);}
+.ni-ic{font-size:20px;line-height:1;}
+.ni-lb{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.ni-pip{width:4px;height:4px;border-radius:50%;background:var(--accent2);opacity:0;transition:opacity .2s;margin-top:1px;}
+.ni.on .ni-pip{opacity:1;}
+
+/* ── CARDS ──────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;}
+
+/* ── PRIZE HERO ─────────────────────────────────────── */
+.phero{background:var(--text);border-radius:var(--r);padding:22px 20px;margin-bottom:12px;position:relative;overflow:hidden;}
+.phero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:var(--accent);border-radius:50%;opacity:.07;}
+.plbl{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:4px;font-family:'DM Mono',monospace;}
+.pamt{font-size:46px;font-weight:800;color:#fff;line-height:1;letter-spacing:-2px;}
+.dark .phero{background:var(--card);}
+.dark .pamt{color:var(--text);}
+.pamt em{font-size:20px;font-weight:400;opacity:.5;font-style:normal;}
+.pmeta{display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;margin-top:14px;}
+.pdiv{background:rgba(255,255,255,.1);}
+.dark .pdiv{background:var(--border);}
+.pmi{padding:0 10px;}
+.pmi:first-child{padding-left:0;}
+.pmv{font-size:16px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;}
+.dark .pmv{color:var(--text);}
+.pml{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.4px;font-family:'DM Mono',monospace;margin-top:2px;}
+.dark .pml{color:var(--text3);}
+.trow{display:flex;align-items:center;gap:6px;margin-top:13px;padding-top:13px;border-top:1px solid rgba(255,255,255,.1);}
+.dark .trow{border-color:var(--border);}
+.tdot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+.ttxt{font-size:11px;color:rgba(255,255,255,.5);font-family:'DM Mono',monospace;}
+.dark .ttxt{color:var(--text3);}
+.tval{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--accent);margin-left:auto;}
+
+/* ── TICKET ─────────────────────────────────────────── */
+.tbox{display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:var(--rs);margin-bottom:12px;}
+.tbox.yes{background:rgba(168,208,32,.1);border:1px solid rgba(168,208,32,.25);}
+.tbox.no{background:var(--card);border:1px solid var(--border);}
+.tbox-i{flex:1;}
+.tbox-t{font-size:13px;font-weight:700;color:var(--text);}
+.tbox-s{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.tbox-n{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent2);}
+
+/* ── PROGRESS ───────────────────────────────────────── */
+.prog{margin-bottom:14px;}
+.prog-h{display:flex;justify-content:space-between;margin-bottom:5px;}
+.prog-l{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.8px;}
+.prog-v{font-size:10px;font-weight:700;font-family:'DM Mono',monospace;color:var(--accent2);}
+.pbar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:2px;transition:width 1s ease;}
+.phint{font-size:10px;color:var(--text3);margin-top:4px;}
+
+/* ── BUTTONS ────────────────────────────────────────── */
+.btn{width:100%;padding:16px;border:none;border-radius:var(--rs);font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:9px;}
+.btn:active{transform:scale(.98);}
+.bp{background:var(--accent);color:#1a2d00;}
+.bp:hover{background:var(--accent2);color:#1a2d00;}
+.bg2{background:transparent;color:var(--text);border:1.5px solid var(--border);}
+.bg2:hover{background:var(--bg3);}
+.bd{background:rgba(239,68,68,.07);color:var(--red);border:1.5px solid rgba(239,68,68,.18);}
+.bsm{width:auto;padding:9px 16px;font-size:12px;border-radius:10px;}
+
+/* BUY BUTTON STATES */
+@keyframes ctapulse{0%,100%{box-shadow:0 0 0 0 rgba(168,208,32,.4);}50%{box-shadow:0 0 0 8px rgba(168,208,32,.0);}}
+#buy-btn:not(.participated){animation:ctapulse 2s infinite;}
+#buy-btn.participated{background:var(--bg3);color:var(--text3);border:1.5px solid var(--border);cursor:default;}
+#buy-btn.participated:hover{background:var(--bg3);transform:none;}
+
+/* ── SECTION TITLE ──────────────────────────────────── */
+.sec{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin:18px 0 10px;font-family:'DM Mono',monospace;}
+
+/* ── WINNERS ────────────────────────────────────────── */
+.wr{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);}
+.wr:last-child{border-bottom:none;}
+.wa{width:34px;height:34px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.wi{flex:1;}
+.wn{font-size:12px;font-weight:700;color:var(--text);}
+.wd2{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}
+.wp{font-size:12px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace;}
+
+/* ── INFO BOXES ─────────────────────────────────────── */
+.ibox{border-radius:11px;padding:12px 13px;margin-bottom:13px;}
+.ibox.gold{background:var(--goldbg);border:1px solid rgba(240,180,41,.25);}
+.ibox.blue{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.18);}
+.ibox.green{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.18);}
+.ibox-h{font-size:11px;font-weight:700;margin-bottom:3px;}
+.ibox.gold .ibox-h{color:var(--gold);}
+.ibox.blue .ibox-h{color:var(--blue);}
+.ibox.green .ibox-h{color:var(--green);}
+.ibox-b{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;line-height:1.55;}
+
+/* ── LIVE BADGE ─────────────────────────────────────── */
+.lbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(200,241,53,.09);border:1px solid rgba(200,241,53,.2);border-radius:20px;font-size:9px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:.5px;font-family:'DM Mono',monospace;}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--accent2);animation:blink 1.5s infinite;}
+
+/* ── COUNTDOWN BANNER ───────────────────────────────── */
+.cb{background:rgba(168,208,32,.1);border:1px solid rgba(168,208,32,.25);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.cb.hide{display:none;}
+.cb-dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);animation:blink 1s infinite;flex-shrink:0;}
+.cb-txt{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;font-weight:600;}
+
+/* ── BALANCE HERO ───────────────────────────────────── */
+.bhero{background:linear-gradient(135deg,#1c1a14,#2d2a20);border-radius:var(--r);padding:20px;margin-bottom:12px;position:relative;overflow:hidden;}
+.bhero::after{content:'USDT';position:absolute;right:-6px;bottom:-10px;font-size:60px;font-weight:800;color:rgba(255,255,255,.04);font-family:'DM Mono',monospace;pointer-events:none;}
+.blbl{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.45);font-family:'DM Mono',monospace;}
+.bamt{font-size:38px;font-weight:800;color:#fff;letter-spacing:-1.5px;margin:4px 0 14px;}
+.bamt em{font-size:16px;font-weight:400;opacity:.4;font-style:normal;}
+.bacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.bbtn{padding:11px;border-radius:11px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#fff;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center;}
+.bbtn:hover{background:rgba(255,255,255,.15);}
+.bbtn.hl{background:var(--accent);border-color:var(--accent);color:var(--adark);}
+.bbtn.hl:hover{background:var(--accent2);}
+
+/* ── TOGGLE ─────────────────────────────────────────── */
+.tog{width:46px;height:26px;background:var(--bg3);border-radius:13px;border:1.5px solid var(--border);cursor:pointer;position:relative;transition:all .25s;flex-shrink:0;}
+.tog.on{background:var(--accent);border-color:var(--accent2);}
+.tog::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.25);}
+.tog.on::after{transform:translateX(20px);}
+
+/* ── AUTO ROW ───────────────────────────────────────── */
+.arow{display:flex;align-items:center;justify-content:space-between;padding:14px 15px;background:var(--card);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:8px;}
+.at{font-size:14px;font-weight:700;color:var(--text);}
+.as{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+
+/* ── GIFT CARD ──────────────────────────────────────── */
+.gc{background:linear-gradient(135deg,#1c1a14,#2a2518);border-radius:var(--r);padding:18px;margin-bottom:12px;position:relative;overflow:hidden;border:1px solid rgba(200,241,53,.15);}
+.gc::before{content:'🎁';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:42px;opacity:.12;}
+.gt{font-size:14px;font-weight:700;color:#fff;}
+.gs{font-size:10px;color:rgba(255,255,255,.45);margin-top:3px;font-family:'DM Mono',monospace;}
+.gp{font-size:22px;font-weight:800;color:var(--accent);margin:8px 0 12px;}
+
+/* ── STATS GRID ─────────────────────────────────────── */
+.sgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.sbox{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:12px 8px;text-align:center;}
+.sv{font-size:21px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);}
+.sl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+
+/* ── HISTORY ────────────────────────────────────────── */
+.hi{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:11px;}
+.hi:last-child{border-bottom:none;}
+.hic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.hic.w{background:rgba(34,197,94,.12);}
+.hic.l{background:rgba(239,68,68,.08);}
+.hic.d{background:rgba(200,241,53,.1);}
+.hin{flex:1;}
+.ht{font-size:12px;font-weight:700;color:var(--text);}
+.hd{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:1px;}
+.ha{font-size:13px;font-weight:700;font-family:'DM Mono',monospace;}
+.ha.p{color:var(--green);}
+.ha.n{color:var(--text2);}
+
+/* ── DRAW CARD ──────────────────────────────────────── */
+.dc{background:var(--card);border:1px solid var(--border);border-radius:var(--rs);padding:15px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;}
+.dc:hover{border-color:var(--text2);}
+.dct{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;}
+.dcd{font-size:14px;font-weight:700;color:var(--text);}
+.dcb{font-size:9px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;font-family:'DM Mono',monospace;}
+.dcb.done{background:rgba(34,197,94,.12);color:var(--green);}
+.dcb.live{background:rgba(200,241,53,.12);color:var(--accent2);}
+.dcs{display:grid;grid-template-columns:repeat(3,1fr);}
+.dcsv{font-size:14px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);}
+.dcsl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;margin-top:2px;}
+
+/* ── PROFILE ────────────────────────────────────────── */
+.ph{display:flex;align-items:center;gap:13px;margin-bottom:16px;}
+.pav{width:58px;height:58px;border-radius:17px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:25px;border:2px solid var(--border);}
+.pn{font-size:19px;font-weight:800;color:var(--text);}
+.pt{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+.pb{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-top:4px;background:rgba(168,208,32,.12);color:var(--accent2);border:1px solid rgba(168,208,32,.25);}
+
+/* ── SETTINGS ───────────────────────────────────────── */
+.si{display:flex;align-items:center;gap:11px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .2s;}
+.si:hover{opacity:.7;}
+.si:last-child{border-bottom:none;}
+.sic{width:35px;height:35px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.stx{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.sv2{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-right:4px;}
+.sar{color:var(--text3);font-size:17px;}
+
+/* ── CHIPS ──────────────────────────────────────────── */
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px;}
+.chip{padding:8px 13px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;transition:all .2s;}
+.chip.on{background:var(--text);border-color:var(--text);color:var(--bg);}
+
+/* ── REFERRAL ───────────────────────────────────────── */
+.refbox{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:11px;padding:10px 13px;}
+.reflink{flex:1;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cbtn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;background:var(--card);border:1px solid var(--border);font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;transition:background .2s;}
+.cbtn:hover{background:var(--bg3);}
+
+/* ── MODALS ─────────────────────────────────────────── */
+.ov{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:100;display:none;align-items:flex-end;}
+.ov.open{display:flex;animation:fup .18s ease;}
+.sheet{width:100%;background:var(--card);border-radius:24px 24px 0 0;padding:0 18px 30px;max-height:88%;overflow-y:auto;animation:sup .28s ease;}
+.sheet::-webkit-scrollbar{display:none;}
+@keyframes sup{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sh{width:36px;height:4px;background:var(--border);border-radius:2px;margin:14px auto 18px;}
+.st{font-size:18px;font-weight:800;margin-bottom:5px;color:var(--text);}
+.ss{font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5;}
+
+/* NET TABS */
+.ntabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:15px;}
+.ntab{padding:11px;border-radius:11px;border:1.5px solid var(--border);background:var(--bg2);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .2s;text-align:center;}
+.ntab.on{background:var(--text);border-color:var(--text);color:var(--bg);}
+
+/* ADDR */
+.abox{background:var(--bg2);border:1.5px dashed var(--border);border-radius:var(--rs);padding:15px;margin-bottom:13px;text-align:center;}
+.aqr{width:68px;height:68px;background:var(--bg3);border-radius:10px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:26px;}
+.aval{font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);word-break:break-all;line-height:1.7;}
+
+/* FIELD */
+.field{margin-bottom:11px;}
+.flbl{font-size:10px;color:var(--text2);margin-bottom:5px;font-family:'DM Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.field input{width:100%;padding:13px;background:var(--bg2);border:1.5px solid var(--border);border-radius:11px;font-family:'DM Mono',monospace;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;}
+.field input:focus{border-color:var(--accent2);}
+
+/* NOTIF */
+.nrow{display:flex;align-items:center;padding:13px 0;border-bottom:1px solid var(--border);}
+.nrow:last-child{border-bottom:none;}
+.ninfo{flex:1;}
+.nt2{font-size:13px;font-weight:700;color:var(--text);}
+.ns{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:2px;}
+
+/* LEGAL */
+.lh2{font-size:13px;font-weight:700;margin:14px 0 5px;color:var(--text);}
+.lp{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:7px;}
+.ll{list-style:none;margin-bottom:8px;}
+.ll li{font-size:12px;color:var(--text2);line-height:1.6;padding-left:14px;position:relative;margin-bottom:3px;}
+.ll li::before{content:'—';position:absolute;left:0;color:var(--text3);}
+.lmeta{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;}
+.code{background:var(--bg2);border-radius:10px;padding:11px 13px;margin-bottom:11px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);line-height:1.9;}
+
+/* FRIEND */
+.fri{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;border:1.5px solid var(--border);margin-bottom:8px;cursor:pointer;transition:border-color .2s;background:var(--card);}
+.fri.on{border-color:var(--accent2);background:rgba(168,208,32,.06);}
+.fra{width:35px;height:35px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.frn{font-size:13px;font-weight:700;color:var(--text);}
+.frt{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}
+.frch{margin-left:auto;font-size:16px;opacity:0;transition:opacity .2s;color:var(--accent2);}
+.fri.on .frch{opacity:1;}
+
+/* SEP */
+.sep{height:1px;background:var(--border);margin:4px 0 14px;}
+
+/* TOAST */
+.toast{position:absolute;top:70px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 18px;border-radius:11px;font-size:12px;font-weight:700;z-index:999;opacity:0;transition:opacity .22s;pointer-events:none;white-space:nowrap;max-width:88%;}
+.toast.on{opacity:1;}
+
+/* DRAW RESULT SCREENS */
+.drawres{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:300;padding:28px 24px;text-align:center;}
+.drawres.show{display:flex;animation:fup .4s ease;}
+.drawres.win{background:linear-gradient(160deg,#0a1f00,#0f2d05,#1a3d0a);}
+.drawres.lose{background:linear-gradient(160deg,#0f0f0d,#161613,#1a1a16);}
+.dr-em{font-size:72px;margin-bottom:16px;animation:bounce .6s ease;}
+@keyframes bounce{0%{transform:scale(.5);opacity:0;}60%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
+.dr-title{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;}
+.dr-sub{font-size:14px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:24px;max-width:280px;}
+.dr-amt{font-size:52px;font-weight:800;color:var(--accent);letter-spacing:-2px;margin-bottom:6px;font-family:'DM Mono',monospace;}
+.dr-aml{font-size:12px;color:rgba(255,255,255,.45);margin-bottom:28px;font-family:'DM Mono',monospace;}
+.dr-btn1{width:100%;padding:16px;border:none;border-radius:14px;background:var(--accent);color:#1a2d00;font-family:'Syne',sans-serif;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;}
+.dr-btn2{width:100%;padding:14px;border:1.5px solid rgba(255,255,255,.2);border-radius:14px;background:transparent;color:rgba(255,255,255,.75);font-family:'Syne',sans-serif;font-size:14px;font-weight:600;cursor:pointer;}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.confetti span{position:absolute;top:-20px;width:8px;height:8px;border-radius:2px;animation:fall linear infinite;}
+@keyframes fall{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+</style>
+</head>
+<body>
+<div class="frame" id="app">
+
+<!-- ═══ AUTH ═══ -->
+<div class="auth" id="auth-screen">
+  <div class="auth-logo">Lmoney<em>.</em></div>
+  <div class="auth-tag">Ежедневные розыгрыши USDT.<br>Один билет — один честный шанс.</div>
+  <div class="auth-vis">🎯</div>
+
+  <div id="first-launch-block">
+    <button class="auth-btn" onclick="doLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.94z"/></svg>
+      Начать играть
+    </button>
+    <div class="auth-note">Авторизация через ваш Telegram аккаунт.<br>Безопасно — мы видим только ваш ID и имя.</div>
+    <div class="agree-row" onclick="toggleAgree()">
+      <div class="agree-box" id="agree-box"></div>
+      <div class="agree-txt">Я принимаю
+        <a onclick="event.stopPropagation();openModal('terms')">Пользовательское соглашение</a>,
+        <a onclick="event.stopPropagation();openModal('privacy')">Политику конфиденциальности</a>
+        и <a onclick="event.stopPropagation();openModal('rules')">Правила розыгрышей</a>.
+        Мне исполнилось 18 лет.
+      </div>
+    </div>
+  </div>
+
+  <div id="relogin-block" style="display:none;">
+    <div style="font-size:14px;color:var(--text2);margin-bottom:20px;line-height:1.6;">С возвращением! Ваш баланс и история сохранены.</div>
+    <button class="auth-btn" onclick="doLogin()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.94z"/></svg>
+      Войти через Telegram
+    </button>
+    <div class="auth-note">Войдёте автоматически по вашему Telegram аккаунту.</div>
+  </div>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div class="app" id="main-app">
+  <div class="tbar">
+    <div class="logo">Lmoney<em>.</em></div>
+    <div class="balchip" onclick="showScr('wallet')">
+      <span class="balchip-l">USDT</span>
+      <span class="balchip-v" id="hbal">47.50</span>
+    </div>
+  </div>
+
+  <div class="content" id="mc">
+
+    <!-- HOME -->
+    <div id="scr-home" class="scr on">
+      <div class="cb hide" id="draw-banner">
+        <div class="cb-dot"></div>
+        <div class="cb-txt" id="banner-txt">Розыгрыш через 00:05:00</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+        <div class="lbadge"><div class="ldot"></div>Live</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;" id="hdate"></div>
+      </div>
+      <div class="phero">
+        <div class="plbl">Призовой фонд</div>
+        <div class="pamt" id="pdisplay">843<em> USDT</em></div>
+        <div class="pmeta">
+          <div class="pmi"><div class="pmv" id="tcnt">937</div><div class="pml">билетов</div></div>
+          <div class="pdiv"></div>
+          <div class="pmi"><div class="pmv" id="wcnt">25</div><div class="pml">победителей</div></div>
+          <div class="pdiv"></div>
+          <div class="pmi"><div class="pmv" id="peach">~33.7</div><div class="pml">каждому</div></div>
+        </div>
+        <div class="trow">
+          <div class="tdot"></div>
+          <div class="ttxt">Розыгрыш через</div>
+          <div class="tval" id="cd">--:--:--</div>
+        </div>
+      </div>
+      <div class="tbox yes" id="tbox" style="display:none;">
+        <span style="font-size:20px;">🎟</span>
+        <div class="tbox-i">
+          <div class="tbox-t">Ты участвуешь!</div>
+          <div class="tbox-s" id="tbox-sub">Билет зарегистрирован</div>
+        </div>
+        <div class="tbox-n" id="ticket-num">#—</div>
+      </div>
+      <button class="btn bp" id="buy-btn" onclick="buyTicket()">🎯 Участвовать в розыгрыше</button>
+      <div class="prog">
+        <div class="prog-h">
+          <div class="prog-l">До 50 победителей</div>
+          <div class="prog-v" id="pv">937 / 2000</div>
+        </div>
+        <div class="pbar"><div class="pfill" id="pf" style="width:46.8%"></div></div>
+        <div class="phint">При 2000+ участниках — 50 победителей</div>
+      </div>
+      <div class="sec" id="yesterday-label">Победители вчера</div>
+      <div class="card" style="padding:5px 15px;">
+        <div class="wr"><div class="wa">😺</div><div class="wi"><div class="wn">LM-00847</div><div class="wd2" id="yd1">вчера · #762</div></div><div class="wp">+33.2 USDT</div></div>
+        <div class="wr"><div class="wa">🦊</div><div class="wi"><div class="wn">LM-02341</div><div class="wd2" id="yd2">вчера · #089</div></div><div class="wp">+33.2 USDT</div></div>
+        <div class="wr"><div class="wa">🐋</div><div class="wi"><div class="wn">LM-00119</div><div class="wd2" id="yd3">вчера · #337</div></div><div class="wp">+33.2 USDT</div></div>
+        <div class="wr"><div class="wa">🦁</div><div class="wi"><div class="wn">LM-05502</div><div class="wd2" id="yd4">вчера · #441</div></div><div class="wp">+33.2 USDT</div></div>
+        <div style="text-align:center;padding:9px 0 3px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;" onclick="showScr('draws')">+ ещё 21 победитель →</div>
+      </div>
+      <div class="ibox green">
+        <div class="ibox-h">✓ Честный розыгрыш — провабли фэйр</div>
+        <div class="ibox-b">Seed публикуется до закрытия. Любой может проверить. Фонд = 90% от суммы билетов.</div>
+      </div>
+    </div>
+
+    <!-- WALLET -->
+    <div id="scr-wallet" class="scr">
+      <div class="sec" style="margin-top:4px;">Кошелёк</div>
+      <div class="bhero">
+        <div class="blbl">Баланс</div>
+        <div class="bamt" id="wbal-display">47.50 <em>USDT</em></div>
+        <div class="bacts">
+          <div class="bbtn hl" onclick="openModal('deposit')">+ Пополнить</div>
+          <div class="bbtn" onclick="openModal('withdraw')">↑ Вывести</div>
+        </div>
+      </div>
+      <div class="arow">
+        <div><div class="at">⚡ Авто-участие</div><div class="as">−1 USDT каждый день автоматически</div></div>
+        <div class="tog on" id="atog" onclick="toggleAuto()"></div>
+      </div>
+      <div class="gc">
+        <div class="gt">Подарить подписку другу</div>
+        <div class="gs">365 дней автоматического участия</div>
+        <div class="gp">365 USDT</div>
+        <button class="btn bp bsm" style="margin:0;" onclick="openModal('gift')">🎁 Подарить</button>
+      </div>
+      <div class="sec">Быстрое пополнение</div>
+      <div class="chips">
+        <div class="chip" onclick="selChip(this,10)">10 USDT</div>
+        <div class="chip on" onclick="selChip(this,30)">30 USDT</div>
+        <div class="chip" onclick="selChip(this,90)">90 USDT</div>
+        <div class="chip" onclick="selChip(this,365)">365 USDT</div>
+      </div>
+      <button class="btn bp" id="qtbtn" onclick="openModal('deposit')">Пополнить на 30 USDT</button>
+      <div class="sec">История</div>
+      <div class="card" style="padding:4px 14px;">
+        <div class="hi"><div class="hic w">🏆</div><div class="hin"><div class="ht">Выигрыш · Розыгрыш #441</div><div class="hd">вчера · 00:01 UTC</div></div><div class="ha p">+33.20</div></div>
+        <div class="hi"><div class="hic l">🎟</div><div class="hin"><div class="ht">Билет · Авто-участие</div><div class="hd">вчера · 00:00 UTC</div></div><div class="ha n">−1.00</div></div>
+        <div class="hi"><div class="hic d">⬇</div><div class="hin"><div class="ht">Пополнение · TRC-20</div><div class="hd">3 дня назад · 14:33</div></div><div class="ha p">+30.00</div></div>
+        <div class="hi"><div class="hic l">🎟</div><div class="hin"><div class="ht">Билет · Авто-участие</div><div class="hd">3 дня назад · 00:00 UTC</div></div><div class="ha n">−1.00</div></div>
+        <div class="hi"><div class="hic d">⬇</div><div class="hin"><div class="ht">Пополнение · TON</div><div class="hd">5 дней назад · 19:11</div></div><div class="ha p">+20.00</div></div>
+      </div>
+    </div>
+
+    <!-- DRAWS -->
+    <div id="scr-draws" class="scr">
+      <div class="sec" style="margin-top:4px;">История розыгрышей</div>
+      <div class="dc" style="cursor:default;">
+        <div class="dct"><div class="dcd" id="today-draw">Сегодня</div><div class="dcb live">● Идёт</div></div>
+        <div class="dcs"><div><div class="dcsv" id="lpart">937</div><div class="dcsl">участников</div></div><div><div class="dcsv" id="lfund">843 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv" id="lwins">25</div><div class="dcsl">победителей</div></div></div>
+      </div>
+      <div class="dc" onclick="openModal('ddetail')">
+        <div class="dct"><div class="dcd" id="d-y1">вчера</div><div class="dcb done">✓ Завершён</div></div>
+        <div class="dcs"><div><div class="dcsv">831</div><div class="dcsl">участников</div></div><div><div class="dcsv">747.9 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">25</div><div class="dcsl">победителей</div></div></div>
+      </div>
+      <div class="dc" onclick="openModal('ddetail')">
+        <div class="dct"><div class="dcd" id="d-y2">2 дня назад</div><div class="dcb done">✓ Завершён</div></div>
+        <div class="dcs"><div><div class="dcsv">1204</div><div class="dcsl">участников</div></div><div><div class="dcsv">1083.6 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">25</div><div class="dcsl">победителей</div></div></div>
+      </div>
+      <div class="dc" onclick="openModal('ddetail')">
+        <div class="dct"><div class="dcd" id="d-y3">3 дня назад</div><div class="dcb done">✓ Завершён</div></div>
+        <div class="dcs"><div><div class="dcsv">562</div><div class="dcsl">участников</div></div><div><div class="dcsv">505.8 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">10</div><div class="dcsl">победителей</div></div></div>
+      </div>
+      <div class="ibox blue" style="margin-top:4px;">
+        <div class="ibox-h">🔍 Верификация</div>
+        <div class="ibox-b">Нажмите на завершённый розыгрыш — увидите seed и победителей для самостоятельной проверки.</div>
+      </div>
+    </div>
+
+    <!-- PROFILE -->
+    <div id="scr-profile" class="scr">
+      <div class="ph">
+        <div class="pav">🦁</div>
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="pn" id="prof-name">Alexander</div>
+            <div onclick="openModal('editnick')" style="cursor:pointer;padding:3px 8px;border-radius:6px;background:var(--bg3);font-size:10px;color:var(--text3);font-weight:700;">✏️ Изменить</div>
+          </div>
+          <div class="pt"><span id="prof-tg">@alex_crypto · </span><span id="prof-lmid" onclick="cpLmId()" title="Нажмите чтобы скопировать" style="color:var(--accent2);font-weight:700;cursor:pointer;border-bottom:1px dashed var(--accent2);">LM-00847</span> <span style="font-size:9px;color:var(--text3);">📋</span></div>
+          <div class="pb" id="auto-badge">⚡ Авто-участие активно</div>
+        </div>
+      </div>
+      <div class="sgrid">
+        <div class="sbox"><div class="sv">47</div><div class="sl">участий</div></div>
+        <div class="sbox"><div class="sv">3</div><div class="sl">выигрышей</div></div>
+        <div class="sbox"><div class="sv">+91</div><div class="sl">USDT итого</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text);">Реферальная программа 💸</div>
+        <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">Пригласи друга — если он выиграет, ты получишь <strong style="color:var(--accent2);">5% от его выигрыша</strong> (минимум 1 USDT).</div>
+        <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);">3</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">приглашено</div></div>
+          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--green);">+4.80</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">USDT заработано</div></div>
+        </div>
+        <div class="refbox">
+          <div class="reflink" id="ref-link">lmoney.app/r/LM-00847</div>
+          <div class="cbtn" onclick="cpRef()">📋</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:9px;">
+          <button class="btn bg2 bsm" style="flex:1;margin:0;" onclick="cpRef()">Копировать</button>
+          <button class="btn bp bsm" style="flex:1;margin:0;" onclick="showToast('Открываем Telegram...')">Поделиться</button>
+        </div>
+      </div>
+      <div class="card" style="padding:3px 15px;">
+        <div class="si" onclick="openModal('deposit')"><div class="sic">💳</div><div class="stx">Пополнить баланс</div><div class="sv2" id="prof-bal">47.50 USDT</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('withdraw')"><div class="sic">📤</div><div class="stx">Вывод средств</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('notify')"><div class="sic">🔔</div><div class="stx">Уведомления</div><div class="sar">›</div></div>
+        <div class="si" onclick="toggleDark()"><div class="sic" id="tic">🌙</div><div class="stx">Тёмная тема</div><div class="tog" id="ttog" style="pointer-events:none;"></div></div>
+        <div class="sep" style="margin:0;"></div>
+        <div class="si" onclick="openModal('terms')"><div class="sic">📄</div><div class="stx">Пользовательское соглашение</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('privacy')"><div class="sic">🔒</div><div class="stx">Политика конфиденциальности</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('rules')"><div class="sic">⚖️</div><div class="stx">Правила розыгрышей</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('faq')"><div class="sic">❓</div><div class="stx">FAQ</div><div class="sar">›</div></div>
+        <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
+      </div>
+      <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.1.5 · lmoney.app</div>
+    </div>
+
+  </div><!-- /content -->
+
+  <div class="bnav">
+    <div class="ni on" id="ni-home" onclick="showScr('home')"><div class="ni-ic">🏠</div><div class="ni-lb">Главная</div><div class="ni-pip"></div></div>
+    <div class="ni" id="ni-wallet" onclick="showScr('wallet')"><div class="ni-ic">💰</div><div class="ni-lb">Кошелёк</div><div class="ni-pip"></div></div>
+    <div class="ni" id="ni-draws" onclick="showScr('draws')"><div class="ni-ic">🎲</div><div class="ni-lb">Розыгрыши</div><div class="ni-pip"></div></div>
+    <div class="ni" id="ni-profile" onclick="showScr('profile')"><div class="ni-ic">👤</div><div class="ni-lb">Профиль</div><div class="ni-pip"></div></div>
+  </div>
+</div><!-- /main-app -->
+
+<!-- ═══ MODALS ═══ -->
+<div class="ov" id="m-deposit" onclick="if(event.target===this)closeModal('deposit')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Пополнить баланс</div>
+    <div class="ss">Переведите USDT на адрес ниже. Зачисление автоматическое.</div>
+    <div class="ntabs"><div class="ntab on" onclick="selNet(this,'trc20')">TRC-20 · Tron</div><div class="ntab" onclick="selNet(this,'ton')">TON Network</div></div>
+    <div class="abox"><div class="aqr">▦</div><div class="aval" id="dep-addr">TQn8i4LFxLj7KEJ2Vk3bD9KjmNpRzH7yPq</div><div class="cbtn" style="margin-top:10px;" onclick="cpAddr()">📋 Копировать адрес</div></div>
+    <div class="ibox gold"><div class="ibox-h">⚡ Важно</div><div class="ibox-b">Минимум: 1 USDT · Только USDT в выбранной сети · Зачисление после 1 подтверждения</div></div>
+    <button class="btn bg2" onclick="closeModal('deposit')">Закрыть</button>
+  </div>
+</div>
+
+<div class="ov" id="m-withdraw" onclick="if(event.target===this)closeModal('withdraw')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Вывод средств</div>
+    <div class="ss" id="wd-avail">Доступно: 47.50 USDT · Минимум 5 USDT</div>
+    <div class="ntabs"><div class="ntab on" onclick="selNet(this,'trc20')">TRC-20 · Tron</div><div class="ntab" onclick="selNet(this,'ton')">TON Network</div></div>
+    <div class="field"><div class="flbl">Адрес кошелька</div><input type="text" id="wd-addr" placeholder="Введите адрес"></div>
+    <div class="field"><div class="flbl">Сумма USDT</div><input type="number" id="wd-sum" placeholder="0.00" step="0.01" min="5"></div>
+    <div class="ibox gold"><div class="ibox-h">⚠️ Проверьте адрес</div><div class="ibox-b">Транзакции необратимы. Убедитесь что сеть совпадает с адресом.</div></div>
+    <button class="btn bp" onclick="doWithdraw()">Вывести USDT</button>
+    <button class="btn bg2" onclick="closeModal('withdraw')">Отмена</button>
+  </div>
+</div>
+
+<div class="ov" id="m-gift" onclick="if(event.target===this)closeModal('gift')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Подарить подписку 🎁</div>
+    <div class="ss">365 дней авто-участия за 365 USDT. Введите LM-ID получателя.</div>
+    <div class="ibox blue">
+      <div class="ibox-h">🔐 Почему LM-ID?</div>
+      <div class="ibox-b">Подарок можно отправить только по LM-ID — уникальному номеру в нашей системе. Попросите друга открыть свой профиль и скопировать LM-ID (нажав на него).</div>
+    </div>
+    <div class="field">
+      <div class="flbl">LM-ID получателя</div>
+      <input type="text" id="gift-lmid" placeholder="LM-XXXXX" maxlength="10" style="text-transform:uppercase;font-size:18px;font-weight:700;letter-spacing:1px;">
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;">Формат: LM-XXXXX · Попросите друга скопировать ID из своего профиля</div>
+    <div class="ibox gold"><div class="ibox-h">💸 Стоимость</div><div class="ibox-b">365 USDT будет списано с вашего баланса. Текущий баланс: 47.50 USDT.</div></div>
+    <button class="btn bp" onclick="sendGift()">Отправить подарок</button>
+    <button class="btn bg2" onclick="closeModal('gift')">Отмена</button>
+  </div>
+</div>
+
+<div class="ov" id="m-ddetail" onclick="if(event.target===this)closeModal('ddetail')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Розыгрыш · вчера</div>
+    <div class="ss">Завершён в 00:00:03 UTC · 831 участник · 747.9 USDT фонд</div>
+    <div class="ibox green"><div class="ibox-h">🔍 Верификация</div><div class="ibox-b">Hash (до): 3e9f1a2b...<br>Seed: a7f3c2b9e1d4082...<br>Победители: shuffle(tickets, seed)</div></div>
+    <div class="ibox blue"><div class="ibox-h">🔐 Приватность</div><div class="ibox-b">Победители отображаются как внутренние ID Lmoney. Telegram-никнеймы не раскрываются.</div></div>
+    <div class="sec">Победители (25)</div>
+    <div class="card" style="padding:5px 14px;">
+      <div class="wr"><div class="wa">🎯</div><div class="wi"><div class="wn">LM-00847</div><div class="wd2">билет #762</div></div><div class="wp">+29.92 USDT</div></div>
+      <div class="wr"><div class="wa">🎯</div><div class="wi"><div class="wn">LM-02341</div><div class="wd2">билет #089</div></div><div class="wp">+29.92 USDT</div></div>
+      <div class="wr"><div class="wa">🎯</div><div class="wi"><div class="wn">LM-00119</div><div class="wd2">билет #337</div></div><div class="wp">+29.92 USDT</div></div>
+      <div style="text-align:center;padding:9px 0 3px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;">+ ещё 22 победителя</div>
+    </div>
+    <button class="btn bg2" onclick="closeModal('ddetail')">Закрыть</button>
+  </div>
+</div>
+
+<div class="ov" id="m-notify" onclick="if(event.target===this)closeModal('notify')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Уведомления</div>
+    <div class="ss">Настройте уведомления в Telegram.</div>
+    <div class="nrow"><div class="ninfo"><div class="nt2">Результаты розыгрыша</div><div class="ns">Ежедневно в 00:05 UTC</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="nrow"><div class="ninfo"><div class="nt2">Вы победили! 🏆</div><div class="ns">При выигрыше вашего билета</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="nrow"><div class="ninfo"><div class="nt2">Низкий баланс</div><div class="ns">Когда баланс менее 5 USDT</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="nrow"><div class="ninfo"><div class="nt2">Пополнение зачислено</div><div class="ns">При поступлении средств</div></div><div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="nrow"><div class="ninfo"><div class="nt2">Акции и новости</div><div class="ns">Маркетинговые сообщения</div></div><div class="tog" onclick="this.classList.toggle('on')"></div></div>
+    <button class="btn bp" style="margin-top:14px;" onclick="showToast('✓ Настройки сохранены');closeModal('notify')">Сохранить</button>
+  </div>
+</div>
+
+<div class="ov" id="m-terms" onclick="if(event.target===this)closeModal('terms')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Пользовательское соглашение</div><div class="lmeta">Редакция от 1 января 2025 г.</div>
+    <div class="lh2">1. Общие положения</div><div class="lp">Lmoney — развлекательный сервис ежедневных розыгрышей. Не является организатором лотерей.</div>
+    <div class="lh2">2. Условия участия</div><ul class="ll"><li>Только для лиц старше 18 лет</li><li>1 Telegram = 1 аккаунт Lmoney</li><li>Запрещено использование ботов</li></ul>
+    <div class="lh2">3. Финансовые условия</div><div class="lp">1 билет = 1 USDT. Фонд = 90% суммы билетов. 10% — комиссия платформы. Публично отображается.</div>
+    <div class="lh2">4. Ответственность</div><div class="lp">Участие добровольно и на собственный риск.</div>
+    <button class="btn bp" onclick="closeModal('terms');showToast('✓ Соглашение принято')">Принять</button>
+  </div>
+</div>
+
+<div class="ov" id="m-privacy" onclick="if(event.target===this)closeModal('privacy')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Политика конфиденциальности</div><div class="lmeta">Редакция от 1 января 2025 г.</div>
+    <div class="lh2">Данные</div><ul class="ll"><li>Telegram ID, имя, аватар</li><li>История транзакций и участий</li></ul>
+    <div class="lh2">Использование</div><ul class="ll"><li>Ведение аккаунта и розыгрыши</li><li>Безопасность и антифрод</li></ul>
+    <div class="lh2">Хранение</div><div class="lp">Защищённые серверы. Данные не продаются третьим лицам.</div>
+    <div class="lh2">Контакт</div><div class="lp">privacy@lmoney.app</div>
+    <button class="btn bp" onclick="closeModal('privacy')">Понятно</button>
+  </div>
+</div>
+
+<div class="ov" id="m-rules" onclick="if(event.target===this)closeModal('rules')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Правила розыгрышей</div><div class="lmeta">Действуют с 1 января 2025 г.</div>
+    <div class="lh2">Механика</div><ul class="ll"><li>Розыгрыш ежедневно в 00:00 UTC</li><li>1 билет = 1 USDT = 1 шанс</li><li>Фонд = 90% суммы билетов · 10% комиссия</li></ul>
+    <div class="lh2">Победители</div>
+    <div class="code">&lt;100 участников → 5 победителей<br>100–499 → 10<br>500–1999 → 25<br>2000–9999 → 50<br>10 000+ → 100</div>
+    <div class="lh2">Честность</div><div class="lp">Hash seed до закрытия, seed после. Любой может проверить: shuffle(билеты, seed) = победители.</div>
+    <button class="btn bp" onclick="closeModal('rules')">Понятно</button>
+  </div>
+</div>
+
+<div class="ov" id="m-faq" onclick="if(event.target===this)closeModal('faq')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">FAQ</div>
+    <div class="lh2">Как работает розыгрыш?</div><div class="lp">00:00 UTC — случайные победители среди купивших билеты. Фонд = 90%.</div>
+    <div class="lh2">Когда зачислят выигрыш?</div><div class="lp">В течение 5 минут. Вывод сразу.</div>
+    <div class="lh2">Что такое авто-участие?</div><div class="lp">−1 USDT с баланса ежедневно автоматически.</div>
+    <div class="lh2">Комиссия за вывод?</div><div class="lp">Платформа 0. TRC-20 ≈ 1 USDT, TON ≈ 0.01–0.05 TON.</div>
+    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · support@lmoney.app</div>
+    <button class="btn bp" onclick="closeModal('faq')">Закрыть</button>
+  </div>
+</div>
+
+<div class="ov" id="m-logout" onclick="if(event.target===this)closeModal('logout')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Выйти?</div>
+    <div class="ss">Данные и баланс сохранятся. При следующем входе всё восстановится.</div>
+    <button class="btn bd" onclick="doLogout()">Да, выйти</button>
+    <button class="btn bg2" onclick="closeModal('logout')">Отмена</button>
+  </div>
+</div>
+
+<!-- DRAW RESULT SCREENS -->
+<div class="drawres win" id="win-screen">
+  <div class="confetti" id="confetti"></div>
+  <div class="dr-em">🏆</div>
+  <div class="dr-title">Ты победил!</div>
+  <div class="dr-amt" id="win-amt">+33.7</div>
+  <div class="dr-aml">USDT зачислено на баланс</div>
+  <div class="dr-sub">Поздравляем! Зови друзей — чем больше участников, тем больше приз!</div>
+  <button class="dr-btn1" onclick="closeDrawRes();showToast('Поделились!')">🚀 Поделиться победой</button>
+  <button class="dr-btn2" onclick="closeDrawRes()">Продолжить</button>
+</div>
+
+<div class="drawres lose" id="lose-screen">
+  <div class="dr-em">🎯</div>
+  <div class="dr-title">Не в этот раз</div>
+  <div class="dr-sub">Не унывай! Каждый день — новый шанс. Включи авто-участие чтобы не пропустить ни одного розыгрыша.</div>
+  <button class="dr-btn1" onclick="closeDrawRes();showScr('wallet')">⚡ Включить авто-участие</button>
+  <button class="dr-btn2" onclick="closeDrawRes()">Посмотреть результаты</button>
+</div>
+
+<!-- EDIT NICKNAME MODAL -->
+<div class="ov" id="m-editnick" onclick="if(event.target===this)closeModal('editnick')">
+  <div class="sheet"><div class="sh"></div>
+    <div class="st">Имя в розыгрышах</div>
+    <div class="ss">Это имя будут видеть другие участники если ты выиграешь. По умолчанию — твой LM-номер.</div>
+    <div class="field">
+      <div class="flbl">Никнейм</div>
+      <input type="text" id="nick-input" placeholder="Например: Счастливчик или lucky_one" maxlength="24">
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;">Любые символы, до 24 знаков.<br>Пусто = отображается твой LM-номер.</div>
+    <button class="btn bp" onclick="saveNick()">Сохранить</button>
+    <button class="btn bg2" onclick="closeModal('editnick')">Отмена</button>
+  </div>
+</div>
+
+<div class="toast" id="toast-el"></div>
+
+</div><!-- /frame -->
+
+<script>
+(function(){
+'use strict';
+
+// ── STATE ──────────────────────────────────────────────
+var bal = 47.50;
+var darkOn = false;
+var autoOn = true;
+window.hasTicket = false;
+var agreed = false;
+
+// ── TELEGRAM MINI APP ─────────────────────────────────
+var tg = window.Telegram && window.Telegram.WebApp;
+var tgUser = null;
+if(tg){ tg.ready(); tg.expand(); if(tg.initDataUnsafe && tg.initDataUnsafe.user) tgUser = tg.initDataUnsafe.user; }
+
+// ── STORAGE ───────────────────────────────────────────
+function sKey(){ return tgUser ? 'lm_'+tgUser.id : 'lm_demo'; }
+function getStored(){ try{ return JSON.parse(localStorage.getItem(sKey())||'null'); }catch(e){ return null; } }
+function setStored(d){ try{ localStorage.setItem(sKey(), JSON.stringify(d)); }catch(e){} }
+function genLmId(){ return 'LM-' + Math.floor(10000+Math.random()*90000); }
+
+// ── INIT AUTH STATE ───────────────────────────────────
+(function(){
+  var s = getStored();
+  if(s && s.agreed){
+    // Returning user
+    document.getElementById('first-launch-block').style.display = 'none';
+    document.getElementById('relogin-block').style.display = 'block';
+    if(tgUser){ doLogin(); } // Auto-login inside Telegram
+  }
+})();
+
+// ── AGREE ─────────────────────────────────────────────
+window.toggleAgree = function(){
+  agreed = !agreed;
+  var box = document.getElementById('agree-box');
+  box.classList.toggle('on', agreed);
+  box.textContent = agreed ? '✓' : '';
+};
+
+// ── LOGIN ─────────────────────────────────────────────
+window.doLogin = function(){
+  var s = getStored();
+  var isFirst = !s || !s.agreed;
+  if(isFirst && !agreed){ showToast('Поставьте галочку для продолжения'); return; }
+
+  var name = (s && s.nick) || (tgUser && (tgUser.first_name || tgUser.username)) || (s && s.name) || 'Пользователь';
+  var lmId = (s && s.lmId) || genLmId();
+  setStored({ agreed:true, lmId:lmId, name:name, tgId: tgUser ? tgUser.id : null });
+
+  // Update profile UI
+  var pn = document.getElementById('prof-name'); if(pn) pn.textContent = name;
+  var pt = document.getElementById('prof-tg');
+  if(pt) pt.textContent = (tgUser && tgUser.username) ? '@'+tgUser.username+' · ' : '';
+  var pl = document.getElementById('prof-lmid'); if(pl) pl.textContent = lmId;
+  var rl = document.getElementById('ref-link'); if(rl) rl.textContent = 'lmoney.app/r/' + lmId;
+
+  document.getElementById('auth-screen').classList.add('hide');
+  document.getElementById('main-app').classList.add('show');
+  window.hasTicket = false;
+  document.getElementById('tbox').style.display = 'none';
+  var btn = document.getElementById('buy-btn');
+  btn.textContent = '🎯 Участвовать в розыгрыше';
+  btn.classList.remove('participated');
+  showToast(isFirst ? 'Добро пожаловать, '+name+'! 🎯' : 'С возвращением, '+name+'!');
+};
+
+// ── LOGOUT ────────────────────────────────────────────
+window.doLogout = function(){
+  closeModal('logout');
+  document.getElementById('main-app').classList.remove('show');
+  document.getElementById('first-launch-block').style.display = 'none';
+  document.getElementById('relogin-block').style.display = 'block';
+  document.getElementById('auth-screen').classList.remove('hide');
+  window.hasTicket = false;
+  document.getElementById('tbox').style.display = 'none';
+  var btn = document.getElementById('buy-btn');
+  btn.textContent = '🎯 Участвовать в розыгрыше';
+  btn.classList.remove('participated');
+  showScr('home');
+  showToast('Вы вышли из аккаунта');
+};
+
+// ── SCREENS ───────────────────────────────────────────
+window.showScr = function(name){
+  var ss = document.querySelectorAll('.scr');
+  for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
+  var ns = document.querySelectorAll('.ni');
+  for(var i=0;i<ns.length;i++) ns[i].classList.remove('on');
+  var s = document.getElementById('scr-'+name);
+  var n = document.getElementById('ni-'+name);
+  if(s) s.classList.add('on');
+  if(n) n.classList.add('on');
+  var mc = document.getElementById('mc'); if(mc) mc.scrollTop=0;
+};
+
+// ── THEME ─────────────────────────────────────────────
+window.toggleDark = function(){
+  darkOn = !darkOn;
+  document.getElementById('app').classList.toggle('dark', darkOn);
+  var tic = document.getElementById('tic'); if(tic) tic.textContent = darkOn ? '☀️' : '🌙';
+  var tt = document.getElementById('ttog'); if(tt) tt.classList.toggle('on', darkOn);
+};
+
+// ── MODALS ────────────────────────────────────────────
+window.openModal = function(id){
+  var m=document.getElementById('m-'+id);
+  if(!m) return;
+  if(id==='editnick'){
+    var s=getStored()||{};
+    var inp=document.getElementById('nick-input');
+    if(inp) inp.value = s.nick||'';
+  }
+  m.classList.add('open');
+};
+window.closeModal = function(id){ var m=document.getElementById('m-'+id); if(m) m.classList.remove('open'); };
+
+// ── BUY TICKET ────────────────────────────────────────
+window.buyTicket = function(){
+  if(window.hasTicket){ showToast('Ты уже участвуешь сегодня!'); return; }
+  window.hasTicket = true;
+
+  // Deduct balance
+  bal = Math.max(0, bal - 1);
+  updateBalUI();
+
+  // Update counters
+  var tc = document.getElementById('tcnt');
+  var n = parseInt(tc.textContent) + 1;
+  tc.textContent = n;
+  updateStats(n);
+
+  // Show ticket
+  var tn = document.getElementById('ticket-num'); if(tn) tn.textContent = '#'+n;
+  var ts = document.getElementById('tbox-sub'); if(ts) ts.textContent = 'Баланс: '+bal.toFixed(2)+' USDT';
+  document.getElementById('tbox').style.display = 'flex';
+
+  // Change button
+  var btn = document.getElementById('buy-btn');
+  btn.textContent = '✓ Ты участвуешь';
+  btn.classList.add('participated');
+
+  showToast('🎟 Билет #'+n+' зарегистрирован!');
+};
+
+function updateStats(n){
+  var f = Math.floor(n*0.9);
+  var w = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var pd = document.getElementById('pdisplay'); if(pd) pd.innerHTML = f+'<em> USDT</em>';
+  var wc = document.getElementById('wcnt'); if(wc) wc.textContent = w;
+  var pe = document.getElementById('peach'); if(pe) pe.textContent = '~'+(f/w).toFixed(1);
+  var next = n<100?100:n<500?500:n<2000?2000:n<10000?10000:10000;
+  var prev = n<100?0:n<500?100:n<2000?500:n<10000?2000:0;
+  var pv = document.getElementById('pv'); if(pv) pv.textContent = n+' / '+next;
+  var pf = document.getElementById('pf'); if(pf) pf.style.width = Math.min(100,((n-prev)/(next-prev))*100)+'%';
+  var lp = document.getElementById('lpart'); if(lp) lp.textContent = n;
+  var lf = document.getElementById('lfund'); if(lf) lf.textContent = f+' USDT';
+  var lw = document.getElementById('lwins'); if(lw) lw.textContent = w;
+}
+
+function updateBalUI(){
+  var hb = document.getElementById('hbal'); if(hb) hb.textContent = bal.toFixed(2);
+  var wb = document.getElementById('wbal-display'); if(wb) wb.innerHTML = bal.toFixed(2)+' <em>USDT</em>';
+  var pb = document.getElementById('prof-bal'); if(pb) pb.textContent = bal.toFixed(2)+' USDT';
+  var wa = document.getElementById('wd-avail'); if(wa) wa.textContent = 'Доступно: '+bal.toFixed(2)+' USDT · Минимум 5 USDT';
+}
+
+// ── AUTO ──────────────────────────────────────────────
+window.toggleAuto = function(){
+  autoOn = !autoOn;
+  document.getElementById('atog').classList.toggle('on', autoOn);
+  updateAutoBadge();
+  if(autoOn && !window.hasTicket) buyTicket();
+  showToast(autoOn ? '⚡ Авто-участие включено' : 'Авто-участие выключено');
+};
+
+function updateAutoBadge(){
+  var badge = document.getElementById('auto-badge');
+  if(!badge) return;
+  if(autoOn){
+    badge.textContent = '⚡ Авто-участие активно';
+    badge.style.background = 'rgba(168,208,32,.12)';
+    badge.style.color = 'var(--accent2)';
+    badge.style.borderColor = 'rgba(168,208,32,.25)';
+  } else {
+    badge.textContent = '○ Авто-участие выключено';
+    badge.style.background = 'var(--bg3)';
+    badge.style.color = 'var(--text3)';
+    badge.style.borderColor = 'var(--border)';
+  }
+}
+
+// ── CHIPS ─────────────────────────────────────────────
+window.selChip = function(el, amt){
+  var cs = el.closest('.chips').querySelectorAll('.chip');
+  for(var i=0;i<cs.length;i++) cs[i].classList.remove('on');
+  el.classList.add('on');
+  var b = document.getElementById('qtbtn'); if(b) b.textContent = 'Пополнить на '+amt+' USDT';
+};
+
+// ── NET SELECT ────────────────────────────────────────
+window.selNet = function(el, net){
+  var ts = el.closest('.ntabs').querySelectorAll('.ntab');
+  for(var i=0;i<ts.length;i++) ts[i].classList.remove('on');
+  el.classList.add('on');
+  var a = document.getElementById('dep-addr');
+  if(a) a.textContent = net==='ton' ? 'UQBv3oibQXDVUrMXdXLcHqY7BwmZ3R9pKnT2xYvs4A' : 'TQn8i4LFxLj7KEJ2Vk3bD9KjmNpRzH7yPq';
+};
+
+// ── WITHDRAW ──────────────────────────────────────────
+window.doWithdraw = function(){
+  var addr = document.getElementById('wd-addr').value.trim();
+  var sum = parseFloat(document.getElementById('wd-sum').value);
+  if(!addr){ showToast('Введите адрес кошелька'); return; }
+  if(!sum||sum<5){ showToast('Минимальный вывод: 5 USDT'); return; }
+  if(sum>bal){ showToast('Недостаточно средств'); return; }
+  showToast('✓ Заявка на вывод принята');
+  closeModal('withdraw');
+};
+
+// ── COPY ──────────────────────────────────────────────
+window.cpAddr = function(){ var a=document.getElementById('dep-addr'); if(a&&navigator.clipboard) navigator.clipboard.writeText(a.textContent).catch(function(){}); showToast('📋 Адрес скопирован!'); };
+window.cpLmId = function(){
+  var el = document.getElementById('prof-lmid');
+  var id = el ? el.textContent : '';
+  if(navigator.clipboard) navigator.clipboard.writeText(id).catch(function(){});
+  showToast('📋 LM-ID скопирован: ' + id);
+};
+
+window.cpRef = function(){ if(navigator.clipboard) navigator.clipboard.writeText('lmoney.app/r/alex_cr').catch(function(){}); showToast('📋 Ссылка скопирована!'); };
+
+// ── FRIEND ────────────────────────────────────────────
+window.selFri = function(el){ var fs=document.querySelectorAll('.fri'); for(var i=0;i<fs.length;i++) fs[i].classList.remove('on'); el.classList.add('on'); };
+
+window.sendGift = function(){
+  var inp = document.getElementById('gift-lmid');
+  var val = inp.value.trim().toUpperCase();
+  if(!val || !val.startsWith('LM-') || val.length < 7){
+    showToast('Введите корректный LM-ID (LM-XXXXX)'); return;
+  }
+  var myId = document.getElementById('prof-lmid').textContent;
+  if(val === myId){ showToast('Нельзя отправить подарок себе'); return; }
+  if(bal < 365){ showToast('Недостаточно средств. Нужно 365 USDT'); return; }
+  showToast('🎁 Подарок отправлен на ' + val);
+  closeModal('gift');
+};
+
+// ── TOAST ─────────────────────────────────────────────
+var toastT;
+window.saveNick = function(){
+  var input = document.getElementById('nick-input');
+  var val = input.value.trim();
+  var s = getStored() || {};
+  s.nick = val;
+  setStored(s);
+  // Update display name in profile - show nick, fallback to tg name, then lmId
+  var displayName = val || s.name || s.lmId || 'Пользователь';
+  var pn = document.getElementById('prof-name');
+  if(pn) pn.textContent = displayName;
+  updateWinnerDisplay(val || null);
+  closeModal('editnick');
+  showToast(val ? '✓ Никнейм: ' + val : '✓ Отображается LM-номер');
+};
+
+function updateWinnerDisplay(nick){
+  // Update "my" entries in winners - first row is demo user
+  // In real app this would update based on user's LM-ID match
+  if(nick){
+    var firstWinner = document.querySelector('#scr-home .wr .wn');
+    if(firstWinner && firstWinner.textContent.startsWith('LM-')) firstWinner.textContent = nick;
+  }
+}
+
+window.showToast = function(msg){ var t=document.getElementById('toast-el'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('on'); },2600); };
+
+// ── COUNTDOWN ─────────────────────────────────────────
+function updCD(){
+  var now=new Date(), mid=new Date(now);
+  mid.setUTCHours(24,0,0,0);
+  var d=mid-now;
+  var h=Math.floor(d/3600000).toString().padStart(2,'0');
+  var m=Math.floor((d%3600000)/60000).toString().padStart(2,'0');
+  var s=Math.floor((d%60000)/1000).toString().padStart(2,'0');
+  var el=document.getElementById('cd'); if(el) el.textContent=h+':'+m+':'+s;
+}
+setInterval(updCD,1000); updCD();
+
+// ── DATES ─────────────────────────────────────────────
+var months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function fmtDate(d){ return d.getDate()+' '+months[d.getMonth()]; }
+function dOff(n){ var d=new Date(); d.setDate(d.getDate()-n); return d; }
+var now=new Date();
+var hd=document.getElementById('hdate'); if(hd) hd.textContent=now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+var td=document.getElementById('today-draw'); if(td) td.textContent='Сегодня, '+fmtDate(now);
+var dy1=dOff(1),dy2=dOff(2),dy3=dOff(3);
+var yl=document.getElementById('yesterday-label'); if(yl) yl.textContent='Победители '+fmtDate(dy1);
+[['yd1','#762'],['yd2','#089'],['yd3','#337'],['yd4','#441']].forEach(function(p){ var el=document.getElementById(p[0]); if(el) el.textContent=fmtDate(dy1)+' · '+p[1]; });
+var d1=document.getElementById('d-y1'); if(d1) d1.textContent=fmtDate(dy1);
+var d2=document.getElementById('d-y2'); if(d2) d2.textContent=fmtDate(dy2);
+var d3=document.getElementById('d-y3'); if(d3) d3.textContent=fmtDate(dy3);
+
+// ── LIVE COUNTER ──────────────────────────────────────
+setInterval(function(){
+  var tc=document.getElementById('tcnt');
+  if(!tc||Math.random()>0.35) return;
+  updateStats(parseInt(tc.textContent)+1);
+  tc.textContent = parseInt(tc.textContent)+1;
+},3000);
+
+// ── DRAW BANNER ───────────────────────────────────────
+function checkDraw(){
+  var now=new Date();
+  var secs=86400-(now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds());
+  var banner=document.getElementById('draw-banner');
+  var btxt=document.getElementById('banner-txt');
+  if(secs<=300&&secs>5){
+    banner.classList.remove('hide');
+    var mm=Math.floor(secs/60).toString().padStart(2,'0');
+    var ss=((secs%60)).toString().padStart(2,'0');
+    btxt.textContent='🎲 Розыгрыш через '+mm+':'+ss;
+  } else if(secs<=5&&secs>0){
+    banner.classList.remove('hide');
+    btxt.textContent='🎲 Розыгрыш прямо сейчас!';
+  } else if(secs<=0||(now.getUTCHours()===0&&now.getUTCMinutes()===0&&now.getUTCSeconds()<10)){
+    banner.classList.add('hide');
+    if(window.hasTicket) setTimeout(showDrawResult,1500);
+  } else { banner.classList.add('hide'); }
+}
+setInterval(checkDraw,1000);
+
+// ── DRAW RESULT ───────────────────────────────────────
+function showDrawResult(){
+  if(!window.hasTicket) return;
+  var n=parseInt(document.getElementById('tcnt').textContent)||937;
+  var w=n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var f=Math.floor(n*0.9);
+  var prize=(f/w).toFixed(2);
+  var won=Math.random()<(w/n);
+  if(won){
+    document.getElementById('win-amt').textContent='+'+prize;
+    document.getElementById('win-screen').classList.add('show');
+    spawnConfetti();
+  } else {
+    document.getElementById('lose-screen').classList.add('show');
+  }
+}
+window.closeDrawRes = function(){
+  document.getElementById('win-screen').classList.remove('show');
+  document.getElementById('lose-screen').classList.remove('show');
+  window.hasTicket=false;
+  document.getElementById('tbox').style.display='none';
+  var btn=document.getElementById('buy-btn');
+  btn.textContent='🎯 Участвовать в розыгрыше';
+  btn.classList.remove('participated');
+  showScr('home');
+};
+function spawnConfetti(){
+  var c=document.getElementById('confetti'); if(!c) return;
+  var colors=['#c8f135','#a8d020','#fff','#f0b429','#22c55e'];
+  for(var i=0;i<40;i++){
+    var s=document.createElement('span');
+    s.style.left=Math.random()*100+'%';
+    s.style.background=colors[Math.floor(Math.random()*colors.length)];
+    s.style.animationDuration=(Math.random()*2+1.5)+'s';
+    s.style.animationDelay=(Math.random()*2)+'s';
+    var sz=(Math.random()*6+4)+'px';
+    s.style.width=s.style.height=sz;
+    s.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    c.appendChild(s);
+  }
+}
+// Demo: press D to trigger draw result
+document.addEventListener('keydown',function(e){ if((e.key==='d'||e.key==='D')&&window.hasTicket) showDrawResult(); });
+
+})();
+</script>
+</body>
+</html>
