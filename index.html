@@ -828,7 +828,9 @@ function updateBalUI(){
 }
 function updateStats(n){
   n = parseInt(n) || 0;
-  var f = Math.floor(n*0.9);
+  // v1.3.0: Правильный расчёт фонда — round вместо floor
+  // 2 билета: 2 * 0.9 = 1.8 USDT (не 1)
+  var f = Math.round(n * 0.9 * 100) / 100;
   var w = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
   var pd=document.getElementById('pdisplay'); if(pd) pd.innerHTML=f+'<em> USDT</em>';
   var wc=document.getElementById('wcnt'); if(wc) wc.textContent=w;
@@ -1239,7 +1241,7 @@ function showDrawResult(){
   if(!window.hasTicket) return;
   var n=parseInt(document.getElementById('tcnt').textContent)||937;
   var w=n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
-  var f=Math.floor(n*0.9);
+  var f=Math.round(n*0.9*100)/100;
   var prize=(f/w).toFixed(2);
   var won=Math.random()<(w/n);
   if(won){
