@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('lmoney.supportapp@gmail.com')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.1 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.2 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -828,17 +828,22 @@ function updateBalUI(){
 }
 function updateStats(n){
   n = parseInt(n) || 0;
-  // v1.3.0: Правильный расчёт фонда — round вместо floor
-  // 2 билета: 2 * 0.9 = 1.8 USDT (не 1)
   var f = Math.round(n * 0.9 * 100) / 100;
-  var w = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  // v1.3.2: Победителей не может быть больше чем участников
+  var tier = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var w = Math.min(tier, n); // если 2 участника — 2 победителя, не 5
+  if(w < 1) w = 0;
   var pd=document.getElementById('pdisplay'); if(pd) pd.innerHTML=f+'<em> USDT</em>';
   var wc=document.getElementById('wcnt'); if(wc) wc.textContent=w;
-  var pe=document.getElementById('peach'); if(pe) pe.textContent='~'+(f/w).toFixed(1);
-  var next=n<100?100:n<500?500:n<2000?2000:n<10000?10000:10000;
-  var prev=n<100?0:n<500?100:n<2000?500:n<10000?2000:0;
-  var pv=document.getElementById('pv'); if(pv) pv.textContent=n+' / '+next;
-  var pf=document.getElementById('pf'); if(pf) pf.style.width=Math.min(100,((n-prev)/(next-prev))*100)+'%';
+  var pe=document.getElementById('peach'); if(pe) pe.textContent=w>0?('~'+(f/w).toFixed(1)):'0';
+  // v1.3.2: Прогресс-бар показывает путь к следующему tier
+  var nextTier=n<5?5:n<100?100:n<500?500:n<2000?2000:n<10000?10000:10000;
+  var prevTier=n<5?0:n<100?5:n<500?100:n<2000?500:n<10000?2000:0;
+  var nextWin=n<5?5:n<100?10:n<500?25:n<2000?50:100;
+  var pv=document.getElementById('pv'); if(pv) pv.textContent=n+' / '+nextTier;
+  var ph=document.querySelector('.prog .phint'); if(ph) ph.textContent='При '+nextTier+'+ участниках — '+nextWin+' победителей';
+  var pl=document.querySelector('.prog .prog-l'); if(pl) pl.textContent='До '+nextWin+' победителей';
+  var pf=document.getElementById('pf'); if(pf) pf.style.width=Math.min(100,((n-prevTier)/(nextTier-prevTier))*100)+'%';
   var lp=document.getElementById('lpart'); if(lp) lp.textContent=n;
   var lf=document.getElementById('lfund'); if(lf) lf.textContent=f+' USDT';
   var lw=document.getElementById('lwins'); if(lw) lw.textContent=w;
@@ -939,7 +944,18 @@ window.doLoginSilent = function(){
     var rl=document.getElementById('relogin-block'); if(rl) rl.style.display='none';
   }
   if(tg&&tg.initData&&tg.initData.length>0){
-    apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
+    // v1.3.2: Передаём реферальный код при создании нового пользователя
+    var silentRef='';
+    try{
+      if(tg.initDataUnsafe && tg.initDataUnsafe.start_param){
+        var sp=tg.initDataUnsafe.start_param||'';
+        if(sp.startsWith('LM-')) silentRef=sp;
+      }
+      if(!silentRef) silentRef=localStorage.getItem('lm_ref')||'';
+    }catch(e){}
+    var silentPayload={initData:tg.initData};
+    if(silentRef) silentPayload.ref=silentRef;
+    apiCall('POST','/auth',silentPayload).then(function(res){
       if(res&&res.token&&res.user){
         // v1.3.1: Если сервер создал нового пользователя — показать экран с галочкой
         if(res.is_new){
@@ -964,7 +980,7 @@ window.doLoginSilent = function(){
 window.doLogin = function(){
   var s = getStored();
   var isFirst = !s || !s.agreed;
-  if(isFirst && !agreed){ showToast('Поставьте галочку для продолжения'); return; }
+  if(isFirst && !agreed){ showToast('Примите условия использования и правила'); return; }
 
   var btns=document.querySelectorAll('.auth-btn');
   for(var i=0;i<btns.length;i++){ btns[i].disabled=true; btns[i].textContent='Подключаемся...'; }
@@ -1269,7 +1285,9 @@ window.sendGift = function(){
 function showDrawResult(){
   if(!window.hasTicket) return;
   var n=parseInt(document.getElementById('tcnt').textContent)||937;
-  var w=n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var tier=n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var w=Math.min(tier, n);
+  if(w<1) w=1;
   var f=Math.round(n*0.9*100)/100;
   var prize=(f/w).toFixed(2);
   var won=Math.random()<(w/n);
