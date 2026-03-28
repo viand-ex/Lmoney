@@ -467,13 +467,9 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="pbar"><div class="pfill" id="pf" style="width:0%"></div></div>
         <div class="phint">При 5+ участниках — 5 победителей</div>
       </div>
-      <div class="sec" id="yesterday-label">Победители вчера</div>
-      <div class="card" style="padding:5px 15px;">
-        <div class="wr"><div class="wa">😺</div><div class="wi"><div class="wn">LM-00847</div><div class="wd2" id="yd1">вчера · #762</div></div><div class="wp">+33.2 USDT</div></div>
-        <div class="wr"><div class="wa">🦊</div><div class="wi"><div class="wn">LM-02341</div><div class="wd2" id="yd2">вчера · #089</div></div><div class="wp">+33.2 USDT</div></div>
-        <div class="wr"><div class="wa">🐋</div><div class="wi"><div class="wn">LM-00119</div><div class="wd2" id="yd3">вчера · #337</div></div><div class="wp">+33.2 USDT</div></div>
-        <div class="wr"><div class="wa">🦁</div><div class="wi"><div class="wn">LM-05502</div><div class="wd2" id="yd4">вчера · #441</div></div><div class="wp">+33.2 USDT</div></div>
-        <div style="text-align:center;padding:9px 0 3px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;" onclick="showScr('draws')">+ ещё 21 победитель →</div>
+      <div class="sec" id="yesterday-label" style="display:none;">Победители вчера</div>
+      <div class="card" style="padding:5px 15px;display:none;" id="yesterday-winners">
+        <div class="wr"><div class="wa">😺</div><div class="wi"><div class="wn">—</div><div class="wd2" id="yd1">—</div></div><div class="wp">—</div></div>
       </div>
       <div class="ibox green">
         <div class="ibox-h">✓ Честный розыгрыш — провабли фэйр</div>
@@ -511,12 +507,8 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       </div>
       <button class="btn bp" id="qtbtn" onclick="openModal('deposit')">Пополнить на 30 USDT</button>
       <div class="sec">История</div>
-      <div class="card" style="padding:4px 14px;">
-        <div class="hi"><div class="hic w">🏆</div><div class="hin"><div class="ht">Выигрыш · Розыгрыш #441</div><div class="hd">вчера · 00:01 UTC</div></div><div class="ha p">+33.20</div></div>
-        <div class="hi"><div class="hic l">🎟</div><div class="hin"><div class="ht">Билет · Авто-участие</div><div class="hd">вчера · 00:00 UTC</div></div><div class="ha n">−1.00</div></div>
-        <div class="hi"><div class="hic d">⬇</div><div class="hin"><div class="ht">Пополнение · TRC-20</div><div class="hd">3 дня назад · 14:33</div></div><div class="ha p">+30.00</div></div>
-        <div class="hi"><div class="hic l">🎟</div><div class="hin"><div class="ht">Билет · Авто-участие</div><div class="hd">3 дня назад · 00:00 UTC</div></div><div class="ha n">−1.00</div></div>
-        <div class="hi"><div class="hic d">⬇</div><div class="hin"><div class="ht">Пополнение · TON</div><div class="hd">5 дней назад · 19:11</div></div><div class="ha p">+20.00</div></div>
+      <div class="card" style="padding:12px 14px;" id="wallet-history">
+        <div style="text-align:center;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;padding:8px 0;">Транзакции появятся после покупки билета</div>
       </div>
     </div>
 
@@ -527,17 +519,13 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="dct"><div class="dcd" id="today-draw">Сегодня</div><div class="dcb live">● Идёт</div></div>
         <div class="dcs"><div><div class="dcsv" id="lpart">0</div><div class="dcsl">участников</div></div><div><div class="dcsv" id="lfund">0 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv" id="lwins">0</div><div class="dcsl">победителей</div></div></div>
       </div>
-      <div class="dc" onclick="openModal('ddetail')">
+      <div class="dc" onclick="openModal('ddetail')" id="past-draws-placeholder" style="display:none;">
         <div class="dct"><div class="dcd" id="d-y1">вчера</div><div class="dcb done">✓ Завершён</div></div>
-        <div class="dcs"><div><div class="dcsv">831</div><div class="dcsl">участников</div></div><div><div class="dcsv">747.9 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">25</div><div class="dcsl">победителей</div></div></div>
+        <div class="dcs"><div><div class="dcsv">—</div><div class="dcsl">участников</div></div><div><div class="dcsv">— USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">—</div><div class="dcsl">победителей</div></div></div>
       </div>
-      <div class="dc" onclick="openModal('ddetail')">
-        <div class="dct"><div class="dcd" id="d-y2">2 дня назад</div><div class="dcb done">✓ Завершён</div></div>
-        <div class="dcs"><div><div class="dcsv">1204</div><div class="dcsl">участников</div></div><div><div class="dcsv">1083.6 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">25</div><div class="dcsl">победителей</div></div></div>
-      </div>
-      <div class="dc" onclick="openModal('ddetail')">
-        <div class="dct"><div class="dcd" id="d-y3">3 дня назад</div><div class="dcb done">✓ Завершён</div></div>
-        <div class="dcs"><div><div class="dcsv">562</div><div class="dcsl">участников</div></div><div><div class="dcsv">505.8 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv">10</div><div class="dcsl">победителей</div></div></div>
+      <div class="ibox blue" style="margin-top:4px;" id="no-draws-msg">
+        <div class="ibox-h">📋 Пока нет завершённых розыгрышей</div>
+        <div class="ibox-b">Первый розыгрыш пройдёт сегодня в 00:00 UTC. Купи билет и участвуй!</div>
       </div>
       <div class="ibox blue" style="margin-top:4px;">
         <div class="ibox-h">🔍 Верификация</div>
@@ -559,9 +547,9 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         </div>
       </div>
       <div class="sgrid">
-        <div class="sbox"><div class="sv">47</div><div class="sl">участий</div></div>
-        <div class="sbox"><div class="sv">3</div><div class="sl">выигрышей</div></div>
-        <div class="sbox"><div class="sv">+91</div><div class="sl">USDT итого</div></div>
+        <div class="sbox"><div class="sv" id="stat-plays">0</div><div class="sl">участий</div></div>
+        <div class="sbox"><div class="sv" id="stat-wins">0</div><div class="sl">выигрышей</div></div>
+        <div class="sbox"><div class="sv" id="stat-earned">0</div><div class="sl">USDT итого</div></div>
       </div>
       <div class="card">
         <div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text);">Реферальная программа 💸</div>
@@ -592,7 +580,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('lmoney.supportapp@gmail.com')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.3 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.5 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -1304,10 +1292,8 @@ function showDrawResult(){
 window.closeDrawRes = function(){
   document.getElementById('win-screen').classList.remove('show');
   document.getElementById('lose-screen').classList.remove('show');
-  window.hasTicket=false;
-  document.getElementById('tbox').style.display='none';
-  var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='🎟 Купить билет'; btn.classList.remove('participated'); }
+  // v1.3.4: НЕ сбрасываем hasTicket — билет уже куплен на сегодня
+  // Состояние сбросится само при смене дня через loadDraw/auth
   showScr('home');
 };
 function spawnConfetti(){
@@ -1325,9 +1311,7 @@ function spawnConfetti(){
     c.appendChild(s);
   }
 }
-document.addEventListener('keydown',function(e){
-  if((e.key==='d'||e.key==='D') && window.hasTicket) showDrawResult();
-});
+// Debug shortcut removed in v1.3.4
 
 // ── COUNTDOWN ─────────────────────────────────────────
 function updCD(){
