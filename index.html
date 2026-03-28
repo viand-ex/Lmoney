@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.8 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.9 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -876,7 +876,7 @@ setInterval(function(){
       }
     });
   }
-}, 15000);
+}, 3000);
 var toastT;
 function showToast(msg){
   var t=document.getElementById('toast-el');
@@ -936,8 +936,18 @@ window.doLogin = function(){
   var lmId = (s&&s.lmId)||genLmId();
   var name = (s&&s.nick)||tgName||lmId; // default = LM-ID, not "Пользователь"
 
-  // Get saved referral
-  var refCode=''; try{ refCode=localStorage.getItem('lm_ref')||''; }catch(e){}
+  // Get referral code - check multiple sources
+  var refCode='';
+  try{
+    // From localStorage (set when user opened app via ref link)
+    refCode=localStorage.getItem('lm_ref')||'';
+    // Also check Telegram start_param directly (most reliable)
+    if(!refCode && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param){
+      var sp=tg.initDataUnsafe.start_param||'';
+      if(sp.startsWith('LM-')) refCode=sp;
+    }
+  }catch(e){}
+  console.log('refCode on login:', refCode);
 
   function finish(ud){
     if(ud){ bal=parseFloat(ud.balance)||10; lmId=ud.lm_id||lmId; name=(ud.nick)||lmId; }
@@ -951,7 +961,8 @@ window.doLogin = function(){
     // Name = nick if set, else LM-ID
     var pn=document.getElementById('prof-name');
     if(pn) pn.textContent=name;
-    try{ if(refCode) localStorage.removeItem('lm_ref'); }catch(e){}
+    // Clear ref only after confirmed new user registration
+    if(isFirst && refCode){ try{ localStorage.removeItem('lm_ref'); }catch(e){} }
     showToast(isFirst?'Добро пожаловать!':'С возвращением!');
     loadDraw();
     if(ud){ var rc=document.getElementById('ref-count'); if(rc) rc.textContent=ud.referral_count||0; var re=document.getElementById('ref-earned'); if(re) re.textContent=(parseFloat(ud.referral_earned)||0).toFixed(2); }
