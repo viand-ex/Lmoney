@@ -589,10 +589,10 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="openModal('privacy')"><div class="sic">🔒</div><div class="stx">Политика конфиденциальности</div><div class="sar">›</div></div>
         <div class="si" onclick="openModal('rules')"><div class="sic">⚖️</div><div class="stx">Правила розыгрышей</div><div class="sar">›</div></div>
         <div class="si" onclick="openModal('faq')"><div class="sic">❓</div><div class="stx">FAQ</div><div class="sar">›</div></div>
-        <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
+        <div class="si" onclick="showToast('lmoney.supportapp@gmail.com')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.9 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.0 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -696,7 +696,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Данные</div><ul class="ll"><li>Telegram ID, имя, аватар</li><li>История транзакций и участий</li></ul>
     <div class="lh2">Использование</div><ul class="ll"><li>Ведение аккаунта и розыгрыши</li><li>Безопасность и антифрод</li></ul>
     <div class="lh2">Хранение</div><div class="lp">Защищённые серверы. Данные не продаются третьим лицам.</div>
-    <div class="lh2">Контакт</div><div class="lp"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="5626243f2037352f163a3b3938332f78372626">[email&#160;protected]</a></div>
+    <div class="lh2">Контакт</div><div class="lp">lmoney.supportapp@gmail.com</div>
     <button class="btn bp" onclick="closeModal('privacy')">Понятно</button>
   </div>
 </div>
@@ -719,7 +719,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="lh2">Когда зачислят выигрыш?</div><div class="lp">В течение 5 минут. Вывод сразу.</div>
     <div class="lh2">Что такое авто-участие?</div><div class="lp">−1 USDT с баланса ежедневно автоматически.</div>
     <div class="lh2">Комиссия за вывод?</div><div class="lp">Платформа 0. TRC-20 ≈ 1 USDT, TON ≈ 0.01–0.05 TON.</div>
-    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="bfcccacfcfd0cdcbffd3d2d0d1dac691decfcf">[email&#160;protected]</a></div>
+    <div class="lh2">Поддержка</div><div class="lp">@lmoney_support · lmoney.supportapp@gmail.com</div>
     <button class="btn bp" onclick="closeModal('faq')">Закрыть</button>
   </div>
 </div>
@@ -778,17 +778,17 @@ var API = 'https://lmoney-backend-production.up.railway.app';
 var authToken = localStorage.getItem('lm_token') || null;
 
 function apiCall(method, path, body) {
-  return new Promise(function(resolve) {
+  return new Promise(function(resolve, reject) {
     var xhr = new XMLHttpRequest();
     xhr.open(method, API + path, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     if(authToken) xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
     xhr.onload = function(){
       try { resolve(JSON.parse(xhr.responseText)); }
-      catch(e){ resolve({error:'Parse error'}); }
+      catch(e){ reject({error:'Parse error'}); }
     };
-    xhr.onerror = function(){ resolve({error:'Network error'}); };
-    xhr.ontimeout = function(){ resolve({error:'Timeout'}); };
+    xhr.onerror = function(){ reject({error:'Network error'}); };
+    xhr.ontimeout = function(){ reject({error:'Timeout'}); };
     xhr.timeout = 8000;
     xhr.send(body ? JSON.stringify(body) : null);
   });
@@ -862,10 +862,10 @@ function loadDraw(){
       var tc=document.getElementById('tcnt'); if(tc) tc.textContent=n;
       updateStats(n);
     }
-  });
+  }).catch(function(){});
 }
 
-// Poll stats every 15 seconds to keep counter in sync for all users
+// v1.3.0: Poll stats every 1 second for near real-time counter sync
 setInterval(function(){
   if(document.getElementById('main-app').classList.contains('show')){
     apiCall('GET','/stats').then(function(r){
@@ -874,9 +874,9 @@ setInterval(function(){
         var tc=document.getElementById('tcnt'); if(tc) tc.textContent=n;
         updateStats(n);
       }
-    });
+    }).catch(function(){});
   }
-}, 3000);
+}, 1000);
 var toastT;
 function showToast(msg){
   var t=document.getElementById('toast-el');
@@ -901,7 +901,7 @@ window.doLoginSilent = function(){
   if(!s||!s.agreed) return;
   var name=(s.nick)||s.name||s.lmId||'';
   var lmId=s.lmId||genLmId();
-  function finish(ud){
+  function finish(ud, todayTicket){
     if(ud){ bal=parseFloat(ud.balance)||10; name=ud.nick||ud.lm_id||lmId; lmId=ud.lm_id||lmId; }
     else { bal=10; name=name||lmId; }
     setStored({agreed:true,lmId:lmId,name:name,tgId:tgUser.id});
@@ -912,14 +912,31 @@ window.doLoginSilent = function(){
     if(pt){ pt.textContent=(tgUser&&tgUser.username)?('@'+tgUser.username+' · '):''; }
     var pn=document.getElementById('prof-name');
     if(pn){ pn.textContent=(ud&&ud.nick)?ud.nick:lmId; }
+    // v1.3.0: Загружаем реферальные данные
+    if(ud){
+      var rc=document.getElementById('ref-count'); if(rc) rc.textContent=ud.referral_count||0;
+      var re=document.getElementById('ref-earned'); if(re) re.textContent=(parseFloat(ud.referral_earned)||0).toFixed(2);
+    }
+    // v1.3.0: Восстанавливаем состояние билета если уже куплен сегодня
+    if(todayTicket && todayTicket.ticket_number){
+      window.hasTicket=true;
+      var tn=document.getElementById('ticket-num'); if(tn) tn.textContent='#'+todayTicket.ticket_number;
+      var ts=document.getElementById('tbox-sub'); if(ts) ts.textContent='Баланс: '+bal.toFixed(2)+' USDT';
+      document.getElementById('tbox').style.display='flex';
+      var btn=document.getElementById('buy-btn');
+      if(btn){ btn.textContent='✓ Ты участвуешь'; btn.classList.add('participated'); }
+    }
     loadDraw();
   }
   if(tg&&tg.initData&&tg.initData.length>0){
     apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
-      if(res&&res.token&&res.user){authToken=res.token;localStorage.setItem('lm_token',authToken);finish(res.user);}
-      else{finish(null);}
-    });
-  } else { finish(null); }
+      if(res&&res.token&&res.user){
+        authToken=res.token;localStorage.setItem('lm_token',authToken);
+        finish(res.user, res.today_ticket||null);
+      }
+      else{finish(null, null);}
+    }).catch(function(){ finish(null, null); });
+  } else { finish(null, null); }
 };
 
 // ── LOGIN ─────────────────────────────────────────────
@@ -949,7 +966,7 @@ window.doLogin = function(){
   }catch(e){}
   console.log('refCode on login:', refCode);
 
-  function finish(ud){
+  function finish(ud, todayTicket){
     if(ud){ bal=parseFloat(ud.balance)||10; lmId=ud.lm_id||lmId; name=(ud.nick)||lmId; }
     else { bal=10; }
     setStored({agreed:true,lmId:lmId,name:name,tgId:tgUser?tgUser.id:null});
@@ -966,21 +983,36 @@ window.doLogin = function(){
     showToast(isFirst?'Добро пожаловать!':'С возвращением!');
     loadDraw();
     if(ud){ var rc=document.getElementById('ref-count'); if(rc) rc.textContent=ud.referral_count||0; var re=document.getElementById('ref-earned'); if(re) re.textContent=(parseFloat(ud.referral_earned)||0).toFixed(2); }
+    // v1.3.0: Восстанавливаем билет если уже участвует сегодня
+    if(todayTicket && todayTicket.ticket_number){
+      window.hasTicket=true;
+      var tn=document.getElementById('ticket-num'); if(tn) tn.textContent='#'+todayTicket.ticket_number;
+      var tbs=document.getElementById('tbox-sub'); if(tbs) tbs.textContent='Баланс: '+bal.toFixed(2)+' USDT';
+      document.getElementById('tbox').style.display='flex';
+      var bbtn=document.getElementById('buy-btn');
+      if(bbtn){ bbtn.textContent='✓ Ты участвуешь'; bbtn.classList.add('participated'); }
+    }
   }
 
   if(tg && tg.initData && tg.initData.length > 0){
     var payload={initData:tg.initData};
     if(refCode) payload.ref=refCode;
     apiCall('POST','/auth',payload).then(function(res){
-      if(res&&res.token&&res.user){authToken=res.token;localStorage.setItem('lm_token',authToken);finish(res.user);}
-      else{finish(null);}
-    });
-  } else { finish(null); }
+      if(res&&res.token&&res.user){
+        authToken=res.token;localStorage.setItem('lm_token',authToken);
+        finish(res.user, res.today_ticket||null);
+      }
+      else{finish(null, null);}
+    }).catch(function(){ finish(null, null); });
+  } else { finish(null, null); }
 };
 
 // ── LOGOUT ────────────────────────────────────────────
 window.doLogout = function(){
   closeModal('logout');
+  // v1.3.0: Удаляем JWT токен при выходе
+  authToken = null;
+  try{ localStorage.removeItem('lm_token'); }catch(e){}
   document.getElementById('main-app').classList.remove('show');
   document.getElementById('first-launch-block').style.display='none';
   document.getElementById('relogin-block').style.display='block';
@@ -1060,24 +1092,29 @@ window.buyTicket = function(){
       if(r.draw) updateStats(r.draw.total_tickets);
       done(r.ticket_number, r.new_balance);
     } else if(r && r.error==='Insufficient balance'){
-      if(bal >= 1){
-        // Local balance ok - use demo mode for testing
-        var tc=document.getElementById('tcnt');
-        done(parseInt(tc.textContent)+1, bal-1);
-      } else {
-        btn.textContent='🎯 Участвовать в розыгрыше';
-        showToast('Недостаточно средств! Пополни баланс');
-        showScr('wallet');
-        setTimeout(function(){ openModal('deposit'); }, 400);
-      }
+      btn.textContent='🎯 Участвовать в розыгрыше';
+      showToast('Недостаточно средств! Пополни баланс');
+      showScr('wallet');
+      setTimeout(function(){ openModal('deposit'); }, 400);
     } else if(r && r.error==='Already participating today'){
       window.hasTicket=true;
       btn.textContent='✓ Ты участвуешь';
       btn.classList.add('participated');
+      // v1.3.0: Показываем номер билета если сервер вернул
+      if(r.ticket_number){
+        var tn=document.getElementById('ticket-num'); if(tn) tn.textContent='#'+r.ticket_number;
+        var ts=document.getElementById('tbox-sub'); if(ts) ts.textContent='Баланс: '+bal.toFixed(2)+' USDT';
+        document.getElementById('tbox').style.display='flex';
+      }
+      showToast('Ты уже участвуешь сегодня!');
     } else {
-      var tc=document.getElementById('tcnt');
-      done(parseInt(tc.textContent)+1, bal-1);
+      btn.textContent='🎯 Участвовать в розыгрыше';
+      showToast('Ошибка: '+(r&&r.error||'попробуй ещё раз'));
     }
+  }).catch(function(){
+    btn.disabled=false;
+    btn.textContent='🎯 Участвовать в розыгрыше';
+    showToast('Ошибка сети, попробуй ещё раз');
   });
 };
 
