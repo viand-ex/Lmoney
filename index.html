@@ -590,7 +590,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.0 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.2 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -771,58 +771,111 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
 </div><!-- /frame -->
 
 <script>
-(function(){
-'use strict';
-
-// ── API CONFIG ────────────────────────────────────────
+// ── API ───────────────────────────────────────────────
 var API = 'https://lmoney-backend-production.up.railway.app';
 var authToken = localStorage.getItem('lm_token') || null;
 
-async function apiCall(method, path, body) {
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-  if(authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
-  if(body) opts.body = JSON.stringify(body);
-  try {
-    var r = await fetch(API + path, opts);
-    return await r.json();
-  } catch(e) { return { error: 'Network error' }; }
+function apiCall(method, path, body) {
+  return new Promise(function(resolve) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, API + path, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    if(authToken) xhr.setRequestHeader('Authorization', 'Bearer ' + authToken);
+    xhr.onload = function(){
+      try { resolve(JSON.parse(xhr.responseText)); }
+      catch(e){ resolve({error:'Parse error'}); }
+    };
+    xhr.onerror = function(){ resolve({error:'Network error'}); };
+    xhr.ontimeout = function(){ resolve({error:'Timeout'}); };
+    xhr.timeout = 8000;
+    xhr.send(body ? JSON.stringify(body) : null);
+  });
 }
 
-// ── STATE ──────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────
 var bal = 47.50;
 var darkOn = false;
 var autoOn = true;
-window.hasTicket = false;
 var agreed = false;
+window.hasTicket = false;
 
-// ── TELEGRAM MINI APP ─────────────────────────────────
+// ── TELEGRAM ──────────────────────────────────────────
 var tg = window.Telegram && window.Telegram.WebApp;
 var tgUser = null;
-if(tg){ tg.ready(); tg.expand(); if(tg.initDataUnsafe && tg.initDataUnsafe.user) tgUser = tg.initDataUnsafe.user; }
+if(tg){
+  try{ tg.ready(); tg.expand(); }catch(e){}
+  if(tg.initDataUnsafe && tg.initDataUnsafe.user) tgUser = tg.initDataUnsafe.user;
+}
 
 // ── STORAGE ───────────────────────────────────────────
 function sKey(){ return tgUser ? 'lm_'+tgUser.id : 'lm_demo'; }
-function getStored(){ try{ return JSON.parse(localStorage.getItem(sKey())||'null'); }catch(e){ return null; } }
-function setStored(d){ try{ localStorage.setItem(sKey(), JSON.stringify(d)); }catch(e){} }
+function getStored(){
+  try{ return JSON.parse(localStorage.getItem(sKey())||'null'); }catch(e){ return null; }
+}
+function setStored(d){
+  try{ localStorage.setItem(sKey(), JSON.stringify(d)); }catch(e){}
+}
 function genLmId(){ return 'LM-' + Math.floor(10000+Math.random()*90000); }
 
-// ── INIT AUTH STATE ───────────────────────────────────
-(function(){
-  var s = getStored();
-  if(s && s.agreed){
-    // Returning user
-    document.getElementById('first-launch-block').style.display = 'none';
-    document.getElementById('relogin-block').style.display = 'block';
-    if(tgUser){ doLogin(); } // Auto-login inside Telegram
-  }
-})();
+// ── HELPERS ───────────────────────────────────────────
+function updateBalUI(){
+  var hb=document.getElementById('hbal'); if(hb) hb.textContent=bal.toFixed(2);
+  var wb=document.getElementById('wbal-display'); if(wb) wb.innerHTML=bal.toFixed(2)+' <em>USDT</em>';
+  var pb=document.getElementById('prof-bal'); if(pb) pb.textContent=bal.toFixed(2)+' USDT';
+  var wa=document.getElementById('wd-avail'); if(wa) wa.textContent='Доступно: '+bal.toFixed(2)+' USDT';
+}
+function updateStats(n){
+  n = parseInt(n) || 0;
+  var f = Math.floor(n*0.9);
+  var w = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
+  var pd=document.getElementById('pdisplay'); if(pd) pd.innerHTML=f+'<em> USDT</em>';
+  var wc=document.getElementById('wcnt'); if(wc) wc.textContent=w;
+  var pe=document.getElementById('peach'); if(pe) pe.textContent='~'+(f/w).toFixed(1);
+  var next=n<100?100:n<500?500:n<2000?2000:n<10000?10000:10000;
+  var prev=n<100?0:n<500?100:n<2000?500:n<10000?2000:0;
+  var pv=document.getElementById('pv'); if(pv) pv.textContent=n+' / '+next;
+  var pf=document.getElementById('pf'); if(pf) pf.style.width=Math.min(100,((n-prev)/(next-prev))*100)+'%';
+  var lp=document.getElementById('lpart'); if(lp) lp.textContent=n;
+  var lf=document.getElementById('lfund'); if(lf) lf.textContent=f+' USDT';
+  var lw=document.getElementById('lwins'); if(lw) lw.textContent=w;
+}
+function showUI(name, lmId){
+  var pn=document.getElementById('prof-name'); if(pn) pn.textContent=name;
+  var pt=document.getElementById('prof-tg');
+  if(pt && tgUser && tgUser.username) pt.textContent='@'+tgUser.username+' \u00b7 ';
+  var pl=document.getElementById('prof-lmid'); if(pl) pl.textContent=lmId;
+  var rl=document.getElementById('ref-link'); if(rl) rl.textContent='lmoney.app/r/'+lmId;
+  document.getElementById('auth-screen').classList.add('hide');
+  document.getElementById('main-app').classList.add('show');
+  window.hasTicket=false;
+  document.getElementById('tbox').style.display='none';
+  var btn=document.getElementById('buy-btn');
+  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); btn.disabled=false; }
+}
+function loadDraw(){
+  apiCall('GET','/draw/current').then(function(r){
+    if(r && r.draw){
+      updateStats(r.draw.total_tickets);
+      var tc=document.getElementById('tcnt'); if(tc) tc.textContent=r.draw.total_tickets;
+    }
+  });
+}
+var toastT;
+function showToast(msg){
+  var t=document.getElementById('toast-el');
+  if(!t) return;
+  t.textContent=msg; t.classList.add('on');
+  clearTimeout(toastT);
+  toastT=setTimeout(function(){ t.classList.remove('on'); }, 2600);
+}
 
 // ── AGREE ─────────────────────────────────────────────
 window.toggleAgree = function(){
   agreed = !agreed;
-  var box = document.getElementById('agree-box');
+  var box=document.getElementById('agree-box');
+  if(!box) return;
   box.classList.toggle('on', agreed);
-  box.textContent = agreed ? '✓' : '';
+  box.textContent = agreed ? '\u2713' : '';
 };
 
 // ── LOGIN ─────────────────────────────────────────────
@@ -831,62 +884,68 @@ window.doLogin = function(){
   var isFirst = !s || !s.agreed;
   if(isFirst && !agreed){ showToast('Поставьте галочку для продолжения'); return; }
 
-  var name = (s && s.nick) || (tgUser && (tgUser.first_name || tgUser.username)) || (s && s.name) || 'Пользователь';
-  var lmId = (s && s.lmId) || genLmId();
-  setStored({ agreed:true, lmId:lmId, name:name, tgId: tgUser ? tgUser.id : null });
+  var btns=document.querySelectorAll('.auth-btn');
+  for(var i=0;i<btns.length;i++){ btns[i].disabled=true; btns[i].textContent='Подключаемся...'; }
 
-  // Update profile UI
-  var pn = document.getElementById('prof-name'); if(pn) pn.textContent = name;
-  var pt = document.getElementById('prof-tg');
-  if(pt) pt.textContent = (tgUser && tgUser.username) ? '@'+tgUser.username+' · ' : '';
-  var pl = document.getElementById('prof-lmid'); if(pl) pl.textContent = lmId;
-  var rl = document.getElementById('ref-link'); if(rl) rl.textContent = 'lmoney.app/r/' + lmId;
+  var name = (s&&s.nick)||(tgUser&&(tgUser.first_name||tgUser.username))||(s&&s.name)||'Пользователь';
+  var lmId = (s&&s.lmId)||genLmId();
 
-  document.getElementById('auth-screen').classList.add('hide');
-  document.getElementById('main-app').classList.add('show');
-  window.hasTicket = false;
-  document.getElementById('tbox').style.display = 'none';
-  var btn = document.getElementById('buy-btn');
-  btn.textContent = '🎯 Участвовать в розыгрыше';
-  btn.classList.remove('participated');
-  showToast(isFirst ? 'Добро пожаловать, '+name+'! 🎯' : 'С возвращением, '+name+'!');
+  function finish(ud){
+    if(ud){ bal=parseFloat(ud.balance)||bal; name=ud.nick||ud.name||name; lmId=ud.lm_id||lmId; }
+    setStored({agreed:true, lmId:lmId, name:name, tgId:tgUser?tgUser.id:null});
+    updateBalUI();
+    showUI(name, lmId);
+    showToast(isFirst ? 'Добро пожаловать!' : 'С возвращением!');
+    loadDraw();
+  }
+
+  if(tg && tg.initData && tg.initData.length > 0){
+    apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
+      if(res && res.token && res.user){
+        authToken=res.token;
+        localStorage.setItem('lm_token',authToken);
+        finish(res.user);
+      } else { finish(null); }
+    });
+  } else {
+    finish(null);
+  }
 };
 
 // ── LOGOUT ────────────────────────────────────────────
 window.doLogout = function(){
   closeModal('logout');
   document.getElementById('main-app').classList.remove('show');
-  document.getElementById('first-launch-block').style.display = 'none';
-  document.getElementById('relogin-block').style.display = 'block';
+  document.getElementById('first-launch-block').style.display='none';
+  document.getElementById('relogin-block').style.display='block';
   document.getElementById('auth-screen').classList.remove('hide');
-  window.hasTicket = false;
-  document.getElementById('tbox').style.display = 'none';
-  var btn = document.getElementById('buy-btn');
-  btn.textContent = '🎯 Участвовать в розыгрыше';
-  btn.classList.remove('participated');
+  window.hasTicket=false;
+  document.getElementById('tbox').style.display='none';
+  var btn=document.getElementById('buy-btn');
+  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); }
   showScr('home');
   showToast('Вы вышли из аккаунта');
 };
 
 // ── SCREENS ───────────────────────────────────────────
 window.showScr = function(name){
-  var ss = document.querySelectorAll('.scr');
+  var ss=document.querySelectorAll('.scr');
   for(var i=0;i<ss.length;i++) ss[i].classList.remove('on');
-  var ns = document.querySelectorAll('.ni');
+  var ns=document.querySelectorAll('.ni');
   for(var i=0;i<ns.length;i++) ns[i].classList.remove('on');
-  var s = document.getElementById('scr-'+name);
-  var n = document.getElementById('ni-'+name);
+  var s=document.getElementById('scr-'+name);
+  var n=document.getElementById('ni-'+name);
   if(s) s.classList.add('on');
   if(n) n.classList.add('on');
-  var mc = document.getElementById('mc'); if(mc) mc.scrollTop=0;
+  var mc=document.getElementById('mc'); if(mc) mc.scrollTop=0;
 };
 
 // ── THEME ─────────────────────────────────────────────
 window.toggleDark = function(){
-  darkOn = !darkOn;
-  document.getElementById('app').classList.toggle('dark', darkOn);
-  var tic = document.getElementById('tic'); if(tic) tic.textContent = darkOn ? '☀️' : '🌙';
-  var tt = document.getElementById('ttog'); if(tt) tt.classList.toggle('on', darkOn);
+  darkOn=!darkOn;
+  document.getElementById('app').classList.toggle('dark',darkOn);
+  var tic=document.getElementById('tic'); if(tic) tic.textContent=darkOn?'\u2600\ufe0f':'\ud83c\udf19';
+  var tt=document.getElementById('ttog'); if(tt) tt.classList.toggle('on',darkOn);
 };
 
 // ── MODALS ────────────────────────────────────────────
@@ -896,257 +955,158 @@ window.openModal = function(id){
   if(id==='editnick'){
     var s=getStored()||{};
     var inp=document.getElementById('nick-input');
-    if(inp) inp.value = s.nick||'';
+    if(inp) inp.value=s.nick||'';
+  }
+  if(id==='withdraw'){
+    var wd=document.getElementById('wd-sum');
+    if(wd) wd.value=bal.toFixed(2);
   }
   m.classList.add('open');
 };
-window.closeModal = function(id){ var m=document.getElementById('m-'+id); if(m) m.classList.remove('open'); };
+window.closeModal = function(id){
+  var m=document.getElementById('m-'+id); if(m) m.classList.remove('open');
+};
 
 // ── BUY TICKET ────────────────────────────────────────
-window.buyTicket = async function(){
+window.buyTicket = function(){
   if(window.hasTicket){ showToast('Ты уже участвуешь сегодня!'); return; }
+  var btn=document.getElementById('buy-btn');
+  btn.textContent='\u23f3 Регистрируем...'; btn.disabled=true;
 
-  var btn = document.getElementById('buy-btn');
-  btn.textContent = '⏳ Регистрируем...';
-  btn.disabled = true;
+  function done(n, nb){
+    window.hasTicket=true;
+    bal=Math.max(0, nb!==undefined ? nb : bal-1);
+    updateBalUI();
+    var tc=document.getElementById('tcnt'); if(tc) tc.textContent=n;
+    updateStats(n);
+    var tn=document.getElementById('ticket-num'); if(tn) tn.textContent='#'+n;
+    var ts=document.getElementById('tbox-sub'); if(ts) ts.textContent='Баланс: '+bal.toFixed(2)+' USDT';
+    document.getElementById('tbox').style.display='flex';
+    btn.disabled=false;
+    btn.textContent='\u2713 Ты участвуешь';
+    btn.classList.add('participated');
+    showToast('\ud83c\udf9f Билет #'+n+' зарегистрирован!');
+  }
 
-  // Try real API
-  var result = await apiCall('POST', '/ticket/buy');
-
-  btn.disabled = false;
-
-  if(result.error){
-    if(result.error === 'Insufficient balance'){
-      showToast('Недостаточно средств. Пополни баланс!');
-      btn.textContent = '🎯 Участвовать в розыгрыше';
+  apiCall('POST','/ticket/buy').then(function(r){
+    btn.disabled=false;
+    if(r && r.ticket_number){
+      if(r.draw) updateStats(r.draw.total_tickets);
+      done(r.ticket_number, r.new_balance);
+    } else if(r && r.error==='Insufficient balance'){
+      btn.textContent='\ud83c\udfaf Участвовать в розыгрыше';
+      showToast('Недостаточно средств! Пополни баланс');
       showScr('wallet');
       setTimeout(function(){ openModal('deposit'); }, 400);
-      return;
+    } else if(r && r.error==='Already participating today'){
+      window.hasTicket=true;
+      btn.textContent='\u2713 Ты участвуешь';
+      btn.classList.add('participated');
+    } else {
+      var tc=document.getElementById('tcnt');
+      done(parseInt(tc.textContent)+1, bal-1);
     }
-    if(result.error === 'Already participating today'){
-      showToast('Ты уже участвуешь сегодня!');
-      return;
-    }
-    // Fallback — demo mode
-    console.log('API unavailable, demo mode');
-  }
-
-  window.hasTicket = true;
-
-  var n, newBal;
-  if(result.ticket_number){
-    n = result.ticket_number;
-    newBal = result.new_balance;
-    if(result.draw) updateStats(result.draw.total_tickets);
-  } else {
-    // Demo fallback
-    var tc = document.getElementById('tcnt');
-    n = parseInt(tc.textContent) + 1;
-    tc.textContent = n;
-    updateStats(n);
-    newBal = bal - 1;
-  }
-
-  bal = Math.max(0, newBal !== undefined ? newBal : bal - 1);
-  updateBalUI();
-
-  var tn = document.getElementById('ticket-num'); if(tn) tn.textContent = '#'+n;
-  var ts = document.getElementById('tbox-sub'); if(ts) ts.textContent = 'Баланс: '+bal.toFixed(2)+' USDT';
-  document.getElementById('tbox').style.display = 'flex';
-
-  btn.textContent = '✓ Ты участвуешь';
-  btn.classList.add('participated');
-
-  showToast('🎟 Билет #'+n+' зарегистрирован!');
+  });
 };
-
-function updateStats(n){
-  var f = Math.floor(n*0.9);
-  var w = n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
-  var pd = document.getElementById('pdisplay'); if(pd) pd.innerHTML = f+'<em> USDT</em>';
-  var wc = document.getElementById('wcnt'); if(wc) wc.textContent = w;
-  var pe = document.getElementById('peach'); if(pe) pe.textContent = '~'+(f/w).toFixed(1);
-  var next = n<100?100:n<500?500:n<2000?2000:n<10000?10000:10000;
-  var prev = n<100?0:n<500?100:n<2000?500:n<10000?2000:0;
-  var pv = document.getElementById('pv'); if(pv) pv.textContent = n+' / '+next;
-  var pf = document.getElementById('pf'); if(pf) pf.style.width = Math.min(100,((n-prev)/(next-prev))*100)+'%';
-  var lp = document.getElementById('lpart'); if(lp) lp.textContent = n;
-  var lf = document.getElementById('lfund'); if(lf) lf.textContent = f+' USDT';
-  var lw = document.getElementById('lwins'); if(lw) lw.textContent = w;
-}
-
-function updateBalUI(){
-  var hb = document.getElementById('hbal'); if(hb) hb.textContent = bal.toFixed(2);
-  var wb = document.getElementById('wbal-display'); if(wb) wb.innerHTML = bal.toFixed(2)+' <em>USDT</em>';
-  var pb = document.getElementById('prof-bal'); if(pb) pb.textContent = bal.toFixed(2)+' USDT';
-  var wa = document.getElementById('wd-avail'); if(wa) wa.textContent = 'Доступно: '+bal.toFixed(2)+' USDT · Минимум 5 USDT';
-}
 
 // ── AUTO ──────────────────────────────────────────────
+function updateAutoBadge(){
+  var b=document.getElementById('auto-badge');
+  if(!b) return;
+  if(autoOn){ b.textContent='\u26a1 Авто-участие активно'; b.style.background='rgba(168,208,32,.12)'; b.style.color='var(--accent2)'; b.style.borderColor='rgba(168,208,32,.25)'; }
+  else{ b.textContent='\u25cb Авто-участие выключено'; b.style.background='var(--bg3)'; b.style.color='var(--text3)'; b.style.borderColor='var(--border)'; }
+}
 window.toggleAuto = function(){
-  autoOn = !autoOn;
-  document.getElementById('atog').classList.toggle('on', autoOn);
+  autoOn=!autoOn;
+  document.getElementById('atog').classList.toggle('on',autoOn);
   updateAutoBadge();
   if(autoOn && !window.hasTicket) buyTicket();
-  showToast(autoOn ? '⚡ Авто-участие включено' : 'Авто-участие выключено');
+  showToast(autoOn ? '\u26a1 Авто-участие включено' : 'Авто-участие выключено');
 };
-
-function updateAutoBadge(){
-  var badge = document.getElementById('auto-badge');
-  if(!badge) return;
-  if(autoOn){
-    badge.textContent = '⚡ Авто-участие активно';
-    badge.style.background = 'rgba(168,208,32,.12)';
-    badge.style.color = 'var(--accent2)';
-    badge.style.borderColor = 'rgba(168,208,32,.25)';
-  } else {
-    badge.textContent = '○ Авто-участие выключено';
-    badge.style.background = 'var(--bg3)';
-    badge.style.color = 'var(--text3)';
-    badge.style.borderColor = 'var(--border)';
-  }
-}
 
 // ── CHIPS ─────────────────────────────────────────────
 window.selChip = function(el, amt){
-  var cs = el.closest('.chips').querySelectorAll('.chip');
+  var cs=el.closest('.chips').querySelectorAll('.chip');
   for(var i=0;i<cs.length;i++) cs[i].classList.remove('on');
   el.classList.add('on');
-  var b = document.getElementById('qtbtn'); if(b) b.textContent = 'Пополнить на '+amt+' USDT';
+  var b=document.getElementById('qtbtn'); if(b) b.textContent='Пополнить на '+amt+' USDT';
 };
 
 // ── NET SELECT ────────────────────────────────────────
 window.selNet = function(el, net){
-  var ts = el.closest('.ntabs').querySelectorAll('.ntab');
+  var ts=el.closest('.ntabs').querySelectorAll('.ntab');
   for(var i=0;i<ts.length;i++) ts[i].classList.remove('on');
   el.classList.add('on');
-  var a = document.getElementById('dep-addr');
-  if(a) a.textContent = net==='ton' ? 'UQBv3oibQXDVUrMXdXLcHqY7BwmZ3R9pKnT2xYvs4A' : 'TQn8i4LFxLj7KEJ2Vk3bD9KjmNpRzH7yPq';
+  var a=document.getElementById('dep-addr');
+  if(a) a.textContent=net==='ton'?'UQBv3oibQXDVUrMXdXLcHqY7BwmZ3R9pKnT2xYvs4A':'TQn8i4LFxLj7KEJ2Vk3bD9KjmNpRzH7yPq';
 };
 
 // ── WITHDRAW ──────────────────────────────────────────
 window.doWithdraw = function(){
-  var addr = document.getElementById('wd-addr').value.trim();
-  var sum = parseFloat(document.getElementById('wd-sum').value);
+  var addr=document.getElementById('wd-addr').value.trim();
+  var sum=parseFloat(document.getElementById('wd-sum').value);
   if(!addr){ showToast('Введите адрес кошелька'); return; }
   if(!sum||sum<5){ showToast('Минимальный вывод: 5 USDT'); return; }
   if(sum>bal){ showToast('Недостаточно средств'); return; }
-  showToast('✓ Заявка на вывод принята');
+  showToast('\u2713 Заявка на вывод принята');
   closeModal('withdraw');
 };
 
 // ── COPY ──────────────────────────────────────────────
-window.cpAddr = function(){ var a=document.getElementById('dep-addr'); if(a&&navigator.clipboard) navigator.clipboard.writeText(a.textContent).catch(function(){}); showToast('📋 Адрес скопирован!'); };
+window.cpAddr = function(){
+  var a=document.getElementById('dep-addr');
+  if(a && navigator.clipboard) navigator.clipboard.writeText(a.textContent).catch(function(){});
+  showToast('\ud83d\udccb Адрес скопирован!');
+};
+window.cpRef = function(){
+  var rl=document.getElementById('ref-link');
+  var link=rl?rl.textContent:'lmoney.app/r/LM-00000';
+  if(navigator.clipboard) navigator.clipboard.writeText(link).catch(function(){});
+  showToast('\ud83d\udccb Ссылка скопирована!');
+};
 window.cpLmId = function(){
-  var el = document.getElementById('prof-lmid');
-  var id = el ? el.textContent : '';
+  var el=document.getElementById('prof-lmid');
+  var id=el?el.textContent:'';
   if(navigator.clipboard) navigator.clipboard.writeText(id).catch(function(){});
-  showToast('📋 LM-ID скопирован: ' + id);
+  showToast('\ud83d\udccb LM-ID скопирован: '+id);
 };
 
-window.cpRef = function(){ if(navigator.clipboard) navigator.clipboard.writeText('lmoney.app/r/alex_cr').catch(function(){}); showToast('📋 Ссылка скопирована!'); };
-
-// ── FRIEND ────────────────────────────────────────────
-window.selFri = function(el){ var fs=document.querySelectorAll('.fri'); for(var i=0;i<fs.length;i++) fs[i].classList.remove('on'); el.classList.add('on'); };
-
-window.sendGift = function(){
-  var inp = document.getElementById('gift-lmid');
-  var val = inp.value.trim().toUpperCase();
-  if(!val || !val.startsWith('LM-') || val.length < 7){
-    showToast('Введите корректный LM-ID (LM-XXXXX)'); return;
+// ── NICK ──────────────────────────────────────────────
+function updateWinnerDisplay(nick){
+  if(nick){
+    var fw=document.querySelector('#scr-home .wr .wn');
+    if(fw && fw.textContent.startsWith('LM-')) fw.textContent=nick;
   }
-  var myId = document.getElementById('prof-lmid').textContent;
-  if(val === myId){ showToast('Нельзя отправить подарок себе'); return; }
-  if(bal < 365){ showToast('Недостаточно средств. Нужно 365 USDT'); return; }
-  showToast('🎁 Подарок отправлен на ' + val);
+}
+window.saveNick = function(){
+  var input=document.getElementById('nick-input');
+  var val=input.value.trim();
+  var s=getStored()||{};
+  s.nick=val; setStored(s);
+  apiCall('PATCH','/me',{nick:val}).then(function(){}).catch(function(){});
+  var pn=document.getElementById('prof-name');
+  if(pn) pn.textContent=val||s.name||s.lmId||'Пользователь';
+  updateWinnerDisplay(val||null);
+  closeModal('editnick');
+  showToast(val?'\u2713 Никнейм: '+val:'\u2713 Отображается LM-номер');
+};
+
+// ── GIFT ──────────────────────────────────────────────
+window.selFri = function(el){
+  var fs=document.querySelectorAll('.fri');
+  for(var i=0;i<fs.length;i++) fs[i].classList.remove('on');
+  el.classList.add('on');
+};
+window.sendGift = function(){
+  var inp=document.getElementById('gift-lmid');
+  var val=inp.value.trim().toUpperCase();
+  if(!val||!val.startsWith('LM-')||val.length<7){ showToast('Введите корректный LM-ID'); return; }
+  var myId=document.getElementById('prof-lmid').textContent;
+  if(val===myId){ showToast('Нельзя отправить подарок себе'); return; }
+  if(bal<365){ showToast('Недостаточно средств. Нужно 365 USDT'); return; }
+  showToast('\ud83c\udf81 Подарок отправлен на '+val);
   closeModal('gift');
 };
-
-// ── TOAST ─────────────────────────────────────────────
-var toastT;
-window.saveNick = async function(){
-  var input = document.getElementById('nick-input');
-  var val = input.value.trim();
-  var s = getStored() || {};
-  s.nick = val;
-  setStored(s);
-
-  // Try API update
-  apiCall('PATCH', '/me', { nick: val });
-
-  var displayName = val || s.name || s.lmId || 'Пользователь';
-  var pn = document.getElementById('prof-name');
-  if(pn) pn.textContent = displayName;
-  updateWinnerDisplay(val || null);
-  closeModal('editnick');
-  showToast(val ? '✓ Никнейм: ' + val : '✓ Отображается LM-номер');
-};
-
-function updateWinnerDisplay(nick){
-  // Update "my" entries in winners - first row is demo user
-  // In real app this would update based on user's LM-ID match
-  if(nick){
-    var firstWinner = document.querySelector('#scr-home .wr .wn');
-    if(firstWinner && firstWinner.textContent.startsWith('LM-')) firstWinner.textContent = nick;
-  }
-}
-
-window.showToast = function(msg){ var t=document.getElementById('toast-el'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastT); toastT=setTimeout(function(){ t.classList.remove('on'); },2600); };
-
-// ── COUNTDOWN ─────────────────────────────────────────
-function updCD(){
-  var now=new Date(), mid=new Date(now);
-  mid.setUTCHours(24,0,0,0);
-  var d=mid-now;
-  var h=Math.floor(d/3600000).toString().padStart(2,'0');
-  var m=Math.floor((d%3600000)/60000).toString().padStart(2,'0');
-  var s=Math.floor((d%60000)/1000).toString().padStart(2,'0');
-  var el=document.getElementById('cd'); if(el) el.textContent=h+':'+m+':'+s;
-}
-setInterval(updCD,1000); updCD();
-
-// ── DATES ─────────────────────────────────────────────
-var months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-function fmtDate(d){ return d.getDate()+' '+months[d.getMonth()]; }
-function dOff(n){ var d=new Date(); d.setDate(d.getDate()-n); return d; }
-var now=new Date();
-var hd=document.getElementById('hdate'); if(hd) hd.textContent=now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
-var td=document.getElementById('today-draw'); if(td) td.textContent='Сегодня, '+fmtDate(now);
-var dy1=dOff(1),dy2=dOff(2),dy3=dOff(3);
-var yl=document.getElementById('yesterday-label'); if(yl) yl.textContent='Победители '+fmtDate(dy1);
-[['yd1','#762'],['yd2','#089'],['yd3','#337'],['yd4','#441']].forEach(function(p){ var el=document.getElementById(p[0]); if(el) el.textContent=fmtDate(dy1)+' · '+p[1]; });
-var d1=document.getElementById('d-y1'); if(d1) d1.textContent=fmtDate(dy1);
-var d2=document.getElementById('d-y2'); if(d2) d2.textContent=fmtDate(dy2);
-var d3=document.getElementById('d-y3'); if(d3) d3.textContent=fmtDate(dy3);
-
-// ── LIVE COUNTER ──────────────────────────────────────
-setInterval(function(){
-  var tc=document.getElementById('tcnt');
-  if(!tc||Math.random()>0.35) return;
-  updateStats(parseInt(tc.textContent)+1);
-  tc.textContent = parseInt(tc.textContent)+1;
-},3000);
-
-// ── DRAW BANNER ───────────────────────────────────────
-function checkDraw(){
-  var now=new Date();
-  var secs=86400-(now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds());
-  var banner=document.getElementById('draw-banner');
-  var btxt=document.getElementById('banner-txt');
-  if(secs<=300&&secs>5){
-    banner.classList.remove('hide');
-    var mm=Math.floor(secs/60).toString().padStart(2,'0');
-    var ss=((secs%60)).toString().padStart(2,'0');
-    btxt.textContent='🎲 Розыгрыш через '+mm+':'+ss;
-  } else if(secs<=5&&secs>0){
-    banner.classList.remove('hide');
-    btxt.textContent='🎲 Розыгрыш прямо сейчас!';
-  } else if(secs<=0||(now.getUTCHours()===0&&now.getUTCMinutes()===0&&now.getUTCSeconds()<10)){
-    banner.classList.add('hide');
-    if(window.hasTicket) setTimeout(showDrawResult,1500);
-  } else { banner.classList.add('hide'); }
-}
-setInterval(checkDraw,1000);
 
 // ── DRAW RESULT ───────────────────────────────────────
 function showDrawResult(){
@@ -1170,8 +1130,7 @@ window.closeDrawRes = function(){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  btn.textContent='🎯 Участвовать в розыгрыше';
-  btn.classList.remove('participated');
+  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); }
   showScr('home');
 };
 function spawnConfetti(){
@@ -1183,4 +1142,89 @@ function spawnConfetti(){
     s.style.background=colors[Math.floor(Math.random()*colors.length)];
     s.style.animationDuration=(Math.random()*2+1.5)+'s';
     s.style.animationDelay=(Math.random()*2)+'s';
- 
+    var sz=(Math.random()*6+4)+'px';
+    s.style.width=s.style.height=sz;
+    s.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    c.appendChild(s);
+  }
+}
+document.addEventListener('keydown',function(e){
+  if((e.key==='d'||e.key==='D') && window.hasTicket) showDrawResult();
+});
+
+// ── COUNTDOWN ─────────────────────────────────────────
+function updCD(){
+  var now=new Date(), mid=new Date(now);
+  mid.setUTCHours(24,0,0,0);
+  var d=mid-now;
+  var h=Math.floor(d/3600000).toString().padStart(2,'0');
+  var m=Math.floor((d%3600000)/60000).toString().padStart(2,'0');
+  var s=Math.floor((d%60000)/1000).toString().padStart(2,'0');
+  var el=document.getElementById('cd'); if(el) el.textContent=h+':'+m+':'+s;
+}
+setInterval(updCD,1000); updCD();
+
+// ── DATES ─────────────────────────────────────────────
+var months=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function fmtDate(d){ return d.getDate()+' '+months[d.getMonth()]; }
+function dOff(n){ var d=new Date(); d.setDate(d.getDate()-n); return d; }
+(function(){
+  var now=new Date();
+  var hd=document.getElementById('hdate'); if(hd) hd.textContent=now.getDate()+' '+months[now.getMonth()]+' '+now.getFullYear();
+  var td=document.getElementById('today-draw'); if(td) td.textContent='Сегодня, '+fmtDate(now);
+  var y1=dOff(1),y2=dOff(2),y3=dOff(3);
+  var yl=document.getElementById('yesterday-label'); if(yl) yl.textContent='Победители '+fmtDate(y1);
+  [['yd1','#762'],['yd2','#089'],['yd3','#337'],['yd4','#441']].forEach(function(p){
+    var el=document.getElementById(p[0]); if(el) el.textContent=fmtDate(y1)+' \u00b7 '+p[1];
+  });
+  var d1=document.getElementById('d-y1'); if(d1) d1.textContent=fmtDate(y1);
+  var d2=document.getElementById('d-y2'); if(d2) d2.textContent=fmtDate(y2);
+  var d3=document.getElementById('d-y3'); if(d3) d3.textContent=fmtDate(y3);
+})();
+
+// ── LIVE COUNTER ──────────────────────────────────────
+setInterval(function(){
+  var tc=document.getElementById('tcnt');
+  if(!tc || Math.random()>0.35) return;
+  var n=parseInt(tc.textContent)+1;
+  tc.textContent=n;
+  updateStats(n);
+}, 3000);
+
+// ── DRAW BANNER ───────────────────────────────────────
+function checkDraw(){
+  var now=new Date();
+  var secs=86400-(now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds());
+  var banner=document.getElementById('draw-banner');
+  var btxt=document.getElementById('banner-txt');
+  if(!banner) return;
+  if(secs<=300&&secs>5){
+    banner.classList.remove('hide');
+    var mm=Math.floor(secs/60).toString().padStart(2,'0');
+    var ss=(''+secs%60).padStart(2,'0');
+    if(btxt) btxt.textContent='\ud83c\udfb2 Розыгрыш через '+mm+':'+ss;
+  } else if(secs<=5&&secs>0){
+    banner.classList.remove('hide');
+    if(btxt) btxt.textContent='\ud83c\udfb2 Розыгрыш прямо сейчас!';
+  } else if(secs<=0||(now.getUTCHours()===0&&now.getUTCMinutes()===0&&now.getUTCSeconds()<10)){
+    banner.classList.add('hide');
+    if(window.hasTicket) setTimeout(showDrawResult,1500);
+  } else { banner.classList.add('hide'); }
+}
+setInterval(checkDraw,1000);
+
+// ── INIT: check returning user AFTER all functions defined ──
+(function(){
+  var s=getStored();
+  if(s && s.agreed){
+    var fl=document.getElementById('first-launch-block');
+    var rl=document.getElementById('relogin-block');
+    if(fl) fl.style.display='none';
+    if(rl) rl.style.display='block';
+    if(tgUser){ setTimeout(doLogin, 150); }
+  }
+})();
+
+</script>
+</body>
+</html>
