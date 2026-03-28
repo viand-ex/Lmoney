@@ -458,7 +458,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         </div>
         <div class="tbox-n" id="ticket-num">#—</div>
       </div>
-      <button class="btn bp" id="buy-btn" onclick="buyTicket()">🎯 Участвовать в розыгрыше</button>
+      <button class="btn bp" id="buy-btn" onclick="buyTicket()">🎟 Купить билет</button>
       <div class="prog">
         <div class="prog-h">
           <div class="prog-l">До 50 победителей</div>
@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('lmoney.supportapp@gmail.com')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.0 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.1 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -854,7 +854,7 @@ function showUI(name, lmId){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); btn.disabled=false; }
+  if(btn){ btn.textContent='🎟 Купить билет'; btn.classList.remove('participated'); btn.disabled=false; }
 }
 function loadDraw(){
   // Use /stats for real-time global counter shared between all users
@@ -909,7 +909,6 @@ window.doLoginSilent = function(){
     setStored({agreed:true,lmId:lmId,name:name,tgId:tgUser.id});
     updateBalUI();
     showUI(name,lmId);
-    // Fix @username display
     var pt=document.getElementById('prof-tg');
     if(pt){ pt.textContent=(tgUser&&tgUser.username)?('@'+tgUser.username+' · '):''; }
     var pn=document.getElementById('prof-name');
@@ -930,14 +929,34 @@ window.doLoginSilent = function(){
     }
     loadDraw();
   }
+  // v1.3.1: Если сервер не знает пользователя — сбрасываем и показываем первый вход
+  function resetToFirstLaunch(){
+    try{ localStorage.removeItem(sKey()); localStorage.removeItem('lm_token'); }catch(e){}
+    authToken=null;
+    var authEl=document.getElementById('auth-screen');
+    if(authEl){ authEl.style.display=''; authEl.classList.remove('hide'); authEl.classList.remove('auth-preloading'); }
+    var fl=document.getElementById('first-launch-block'); if(fl) fl.style.display='';
+    var rl=document.getElementById('relogin-block'); if(rl) rl.style.display='none';
+  }
   if(tg&&tg.initData&&tg.initData.length>0){
     apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
       if(res&&res.token&&res.user){
+        // v1.3.1: Если сервер создал нового пользователя — показать экран с галочкой
+        if(res.is_new){
+          // Пользователь новый — нужно принять соглашения
+          // Сохраняем токен но показываем first-launch
+          authToken=res.token;localStorage.setItem('lm_token',authToken);
+          // Сохраняем данные пользователя для использования после галочки
+          window._pendingUser=res.user;
+          window._pendingTicket=res.today_ticket||null;
+          resetToFirstLaunch();
+          return;
+        }
         authToken=res.token;localStorage.setItem('lm_token',authToken);
         finish(res.user, res.today_ticket||null);
       }
-      else{finish(null, null);}
-    }).catch(function(){ finish(null, null); });
+      else{ resetToFirstLaunch(); }
+    }).catch(function(){ resetToFirstLaunch(); });
   } else { finish(null, null); }
 };
 
@@ -996,6 +1015,16 @@ window.doLogin = function(){
     }
   }
 
+  // v1.3.1: Если пользователь уже создан через doLoginSilent, используем его данные
+  if(window._pendingUser){
+    var pu=window._pendingUser;
+    var pt2=window._pendingTicket||null;
+    window._pendingUser=null;
+    window._pendingTicket=null;
+    finish(pu, pt2);
+    return;
+  }
+
   if(tg && tg.initData && tg.initData.length > 0){
     var payload={initData:tg.initData};
     if(refCode) payload.ref=refCode;
@@ -1022,7 +1051,7 @@ window.doLogout = function(){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); }
+  if(btn){ btn.textContent='🎟 Купить билет'; btn.classList.remove('participated'); }
   showScr('home');
   showToast('Вы вышли из аккаунта');
 };
@@ -1094,7 +1123,7 @@ window.buyTicket = function(){
       if(r.draw) updateStats(r.draw.total_tickets);
       done(r.ticket_number, r.new_balance);
     } else if(r && r.error==='Insufficient balance'){
-      btn.textContent='🎯 Участвовать в розыгрыше';
+      btn.textContent='🎟 Купить билет';
       showToast('Недостаточно средств! Пополни баланс');
       showScr('wallet');
       setTimeout(function(){ openModal('deposit'); }, 400);
@@ -1110,12 +1139,12 @@ window.buyTicket = function(){
       }
       showToast('Ты уже участвуешь сегодня!');
     } else {
-      btn.textContent='🎯 Участвовать в розыгрыше';
+      btn.textContent='🎟 Купить билет';
       showToast('Ошибка: '+(r&&r.error||'попробуй ещё раз'));
     }
   }).catch(function(){
     btn.disabled=false;
-    btn.textContent='🎯 Участвовать в розыгрыше';
+    btn.textContent='🎟 Купить билет';
     showToast('Ошибка сети, попробуй ещё раз');
   });
 };
@@ -1258,7 +1287,7 @@ window.closeDrawRes = function(){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); }
+  if(btn){ btn.textContent='🎟 Купить билет'; btn.classList.remove('participated'); }
   showScr('home');
 };
 function spawnConfetti(){
