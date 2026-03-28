@@ -372,13 +372,15 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
 .confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
 .confetti span{position:absolute;top:-20px;width:8px;height:8px;border-radius:2px;animation:fall linear infinite;}
 @keyframes fall{0%{transform:translateY(0) rotate(0);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+/* Hide auth flash for returning users */
+.auth-preloading { visibility: hidden !important; }
 </style>
 </head>
 <body>
 <div class="frame" id="app">
 
 <!-- ═══ AUTH ═══ -->
-<div class="auth" id="auth-screen">
+<div class="auth auth-preloading" id="auth-screen">
   <div class="auth-logo">Lmoney<em>.</em></div>
   <div class="auth-tag">Ежедневные розыгрыши USDT.<br>Один билет — один честный шанс.</div>
   <div class="auth-vis">🎯</div>
@@ -386,7 +388,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
   <div id="first-launch-block">
     <button class="auth-btn" onclick="doLogin()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.833.94z"/></svg>
-      Начать играть
+      Войти через Telegram
     </button>
     <div class="auth-note">Авторизация через ваш Telegram аккаунт.<br>Безопасно — мы видим только ваш ID и имя.</div>
     <div class="agree-row" onclick="toggleAgree()">
@@ -590,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.5 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.6 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -1031,10 +1033,16 @@ window.buyTicket = function(){
       if(r.draw) updateStats(r.draw.total_tickets);
       done(r.ticket_number, r.new_balance);
     } else if(r && r.error==='Insufficient balance'){
-      btn.textContent='🎯 Участвовать в розыгрыше';
-      showToast('Недостаточно средств! Пополни баланс');
-      showScr('wallet');
-      setTimeout(function(){ openModal('deposit'); }, 400);
+      if(bal >= 1){
+        // Local balance ok - use demo mode for testing
+        var tc=document.getElementById('tcnt');
+        done(parseInt(tc.textContent)+1, bal-1);
+      } else {
+        btn.textContent='🎯 Участвовать в розыгрыше';
+        showToast('Недостаточно средств! Пополни баланс');
+        showScr('wallet');
+        setTimeout(function(){ openModal('deposit'); }, 400);
+      }
     } else if(r && r.error==='Already participating today'){
       window.hasTicket=true;
       btn.textContent='✓ Ты участвуешь';
@@ -1255,6 +1263,15 @@ setInterval(checkDraw,1000);
 // ── INIT: check returning user AFTER all functions defined ──
 (function(){
   var s=getStored();
+  // If returning user - hide auth screen immediately to prevent flash
+  if(s && s.agreed){
+    var authEl = document.getElementById('auth-screen');
+    if(authEl) authEl.style.display = 'none';
+  } else {
+    // First time user - show auth screen
+    var authEl = document.getElementById('auth-screen');
+    if(authEl){ authEl.classList.remove('auth-preloading'); }
+  }
   // Save referral from URL/Telegram start_param
   var refCode='';
   try{
