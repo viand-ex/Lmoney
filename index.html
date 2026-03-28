@@ -436,13 +436,13 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       </div>
       <div class="phero">
         <div class="plbl">Призовой фонд</div>
-        <div class="pamt" id="pdisplay">843<em> USDT</em></div>
+        <div class="pamt" id="pdisplay">0<em> USDT</em></div>
         <div class="pmeta">
-          <div class="pmi"><div class="pmv" id="tcnt">937</div><div class="pml">билетов</div></div>
+          <div class="pmi"><div class="pmv" id="tcnt">0</div><div class="pml">билетов</div></div>
           <div class="pdiv"></div>
-          <div class="pmi"><div class="pmv" id="wcnt">25</div><div class="pml">победителей</div></div>
+          <div class="pmi"><div class="pmv" id="wcnt">0</div><div class="pml">победителей</div></div>
           <div class="pdiv"></div>
-          <div class="pmi"><div class="pmv" id="peach">~33.7</div><div class="pml">каждому</div></div>
+          <div class="pmi"><div class="pmv" id="peach">0</div><div class="pml">каждому</div></div>
         </div>
         <div class="trow">
           <div class="tdot"></div>
@@ -461,11 +461,11 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       <button class="btn bp" id="buy-btn" onclick="buyTicket()">🎟 Купить билет</button>
       <div class="prog">
         <div class="prog-h">
-          <div class="prog-l">До 50 победителей</div>
-          <div class="prog-v" id="pv">937 / 2000</div>
+          <div class="prog-l">До 5 победителей</div>
+          <div class="prog-v" id="pv">0 / 5</div>
         </div>
-        <div class="pbar"><div class="pfill" id="pf" style="width:46.8%"></div></div>
-        <div class="phint">При 2000+ участниках — 50 победителей</div>
+        <div class="pbar"><div class="pfill" id="pf" style="width:0%"></div></div>
+        <div class="phint">При 5+ участниках — 5 победителей</div>
       </div>
       <div class="sec" id="yesterday-label">Победители вчера</div>
       <div class="card" style="padding:5px 15px;">
@@ -525,7 +525,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       <div class="sec" style="margin-top:4px;">История розыгрышей</div>
       <div class="dc" style="cursor:default;">
         <div class="dct"><div class="dcd" id="today-draw">Сегодня</div><div class="dcb live">● Идёт</div></div>
-        <div class="dcs"><div><div class="dcsv" id="lpart">937</div><div class="dcsl">участников</div></div><div><div class="dcsv" id="lfund">843 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv" id="lwins">25</div><div class="dcsl">победителей</div></div></div>
+        <div class="dcs"><div><div class="dcsv" id="lpart">0</div><div class="dcsl">участников</div></div><div><div class="dcsv" id="lfund">0 USDT</div><div class="dcsl">фонд</div></div><div><div class="dcsv" id="lwins">0</div><div class="dcsl">победителей</div></div></div>
       </div>
       <div class="dc" onclick="openModal('ddetail')">
         <div class="dct"><div class="dcd" id="d-y1">вчера</div><div class="dcb done">✓ Завершён</div></div>
@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('lmoney.supportapp@gmail.com')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.2 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.3.3 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -934,14 +934,18 @@ window.doLoginSilent = function(){
     }
     loadDraw();
   }
-  // v1.3.1: Если сервер не знает пользователя — сбрасываем и показываем первый вход
-  function resetToFirstLaunch(){
-    try{ localStorage.removeItem(sKey()); localStorage.removeItem('lm_token'); }catch(e){}
-    authToken=null;
+  // v1.3.3: Показать экран первого входа (без удаления токена — для новых пользователей)
+  function showFirstLaunchScreen(){
     var authEl=document.getElementById('auth-screen');
     if(authEl){ authEl.style.display=''; authEl.classList.remove('hide'); authEl.classList.remove('auth-preloading'); }
     var fl=document.getElementById('first-launch-block'); if(fl) fl.style.display='';
     var rl=document.getElementById('relogin-block'); if(rl) rl.style.display='none';
+  }
+  // v1.3.1: Полный сброс (пользователь не найден на сервере)
+  function resetToFirstLaunch(){
+    try{ localStorage.removeItem(sKey()); localStorage.removeItem('lm_token'); }catch(e){}
+    authToken=null;
+    showFirstLaunchScreen();
   }
   if(tg&&tg.initData&&tg.initData.length>0){
     // v1.3.2: Передаём реферальный код при создании нового пользователя
@@ -959,13 +963,11 @@ window.doLoginSilent = function(){
       if(res&&res.token&&res.user){
         // v1.3.1: Если сервер создал нового пользователя — показать экран с галочкой
         if(res.is_new){
-          // Пользователь новый — нужно принять соглашения
-          // Сохраняем токен но показываем first-launch
+          // v1.3.3: Пользователь новый — сохраняем токен, показываем галочку
           authToken=res.token;localStorage.setItem('lm_token',authToken);
-          // Сохраняем данные пользователя для использования после галочки
           window._pendingUser=res.user;
           window._pendingTicket=res.today_ticket||null;
-          resetToFirstLaunch();
+          showFirstLaunchScreen();
           return;
         }
         authToken=res.token;localStorage.setItem('lm_token',authToken);
@@ -1284,7 +1286,7 @@ window.sendGift = function(){
 // ── DRAW RESULT ───────────────────────────────────────
 function showDrawResult(){
   if(!window.hasTicket) return;
-  var n=parseInt(document.getElementById('tcnt').textContent)||937;
+  var n=parseInt(document.getElementById('tcnt').textContent)||0;
   var tier=n>=10000?100:n>=2000?50:n>=500?25:n>=100?10:5;
   var w=Math.min(tier, n);
   if(w<1) w=1;
