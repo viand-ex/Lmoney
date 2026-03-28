@@ -567,8 +567,8 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div style="font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text);">Реферальная программа 💸</div>
         <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.6;">Пригласи друга — если он выиграет, ты получишь <strong style="color:var(--accent2);">5% от его выигрыша</strong> (минимум 1 USDT).</div>
         <div style="background:var(--bg2);border-radius:10px;padding:10px 12px;margin-bottom:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);">3</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">приглашено</div></div>
-          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--green);">+4.80</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">USDT заработано</div></div>
+          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--text);" id="ref-count">0</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">приглашено</div></div>
+          <div style="text-align:center;"><div style="font-size:20px;font-weight:800;font-family:'DM Mono',monospace;color:var(--green);" id="ref-earned">0.00</div><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">USDT заработано</div></div>
         </div>
         <div class="refbox">
           <div class="reflink" id="ref-link">t.me/Lmoneyapp_bot/app?startapp=LM-00847</div>
@@ -576,7 +576,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         </div>
         <div style="display:flex;gap:8px;margin-top:9px;">
           <button class="btn bg2 bsm" style="flex:1;margin:0;" onclick="cpRef()">Копировать</button>
-          <button class="btn bp bsm" style="flex:1;margin:0;" onclick="showToast('Открываем Telegram...')">Поделиться</button>
+          <button class="btn bp bsm" style="flex:1;margin:0;" onclick="shareRef()">Поделиться</button>
         </div>
       </div>
       <div class="card" style="padding:3px 15px;">
@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.6 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.7 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -939,6 +939,7 @@ window.doLogin = function(){
     try{ if(refCode) localStorage.removeItem('lm_ref'); }catch(e){}
     showToast(isFirst?'Добро пожаловать!':'С возвращением!');
     loadDraw();
+    if(ud){ var rc=document.getElementById('ref-count'); if(rc) rc.textContent=ud.referral_count||0; var re=document.getElementById('ref-earned'); if(re) re.textContent=(parseFloat(ud.referral_earned)||0).toFixed(2); }
   }
 
   if(tg && tg.initData && tg.initData.length > 0){
@@ -1103,6 +1104,21 @@ window.cpAddr = function(){
   if(a && navigator.clipboard) navigator.clipboard.writeText(a.textContent).catch(function(){});
   showToast('📋 Адрес скопирован!');
 };
+window.shareRef = function(){
+  var rl=document.getElementById('ref-link');
+  var link=rl?rl.textContent:'t.me/Lmoneyapp_bot/app';
+  var fullLink='https://'+link;
+  var text='🎯 Lmoney — ежедневные розыгрыши USDT! Присоединяйся:';
+  var shareUrl='https://t.me/share/url?url='+encodeURIComponent(fullLink)+'&text='+encodeURIComponent(text);
+  if(tg && tg.openTelegramLink){
+    tg.openTelegramLink(shareUrl);
+  } else if(tg && tg.openLink){
+    tg.openLink(shareUrl);
+  } else {
+    window.open(shareUrl,'_blank');
+  }
+};
+
 window.cpRef = function(){
   var rl=document.getElementById('ref-link');
   var link=rl?rl.textContent:'t.me/Lmoneyapp_bot/app';
