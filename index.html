@@ -592,7 +592,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.7 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.8 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -855,13 +855,28 @@ function showUI(name, lmId){
   if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); btn.disabled=false; }
 }
 function loadDraw(){
-  apiCall('GET','/draw/current').then(function(r){
-    if(r && r.draw){
-      updateStats(r.draw.total_tickets);
-      var tc=document.getElementById('tcnt'); if(tc) tc.textContent=r.draw.total_tickets;
+  // Use /stats for real-time global counter shared between all users
+  apiCall('GET','/stats').then(function(r){
+    if(r && r.total_tickets !== undefined){
+      var n = parseInt(r.total_tickets) || 0;
+      var tc=document.getElementById('tcnt'); if(tc) tc.textContent=n;
+      updateStats(n);
     }
   });
 }
+
+// Poll stats every 15 seconds to keep counter in sync for all users
+setInterval(function(){
+  if(document.getElementById('main-app').classList.contains('show')){
+    apiCall('GET','/stats').then(function(r){
+      if(r && r.total_tickets !== undefined){
+        var n=parseInt(r.total_tickets)||0;
+        var tc=document.getElementById('tcnt'); if(tc) tc.textContent=n;
+        updateStats(n);
+      }
+    });
+  }
+}, 15000);
 var toastT;
 function showToast(msg){
   var t=document.getElementById('toast-el');
@@ -1245,14 +1260,7 @@ function dOff(n){ var d=new Date(); d.setDate(d.getDate()-n); return d; }
   var d3=document.getElementById('d-y3'); if(d3) d3.textContent=fmtDate(y3);
 })();
 
-// ── LIVE COUNTER ──────────────────────────────────────
-setInterval(function(){
-  var tc=document.getElementById('tcnt');
-  if(!tc || Math.random()>0.35) return;
-  var n=parseInt(tc.textContent)+1;
-  tc.textContent=n;
-  updateStats(n);
-}, 3000);
+// Live counter disabled - using real server data via /stats polling
 
 // ── DRAW BANNER ───────────────────────────────────────
 function checkDraw(){
