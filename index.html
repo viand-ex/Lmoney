@@ -416,7 +416,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
     <div class="logo">Lmoney<em>.</em></div>
     <div class="balchip" onclick="showScr('wallet')">
       <span class="balchip-l">USDT</span>
-      <span class="balchip-v" id="hbal">47.50</span>
+      <span class="balchip-v" id="hbal">10.00</span>
     </div>
   </div>
 
@@ -484,7 +484,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       <div class="sec" style="margin-top:4px;">Кошелёк</div>
       <div class="bhero">
         <div class="blbl">Баланс</div>
-        <div class="bamt" id="wbal-display">47.50 <em>USDT</em></div>
+        <div class="bamt" id="wbal-display">10.00 <em>USDT</em></div>
         <div class="bacts">
           <div class="bbtn hl" onclick="openModal('deposit')">+ Пополнить</div>
           <div class="bbtn" onclick="openModal('withdraw')">↑ Вывести</div>
@@ -578,7 +578,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         </div>
       </div>
       <div class="card" style="padding:3px 15px;">
-        <div class="si" onclick="openModal('deposit')"><div class="sic">💳</div><div class="stx">Пополнить баланс</div><div class="sv2" id="prof-bal">47.50 USDT</div><div class="sar">›</div></div>
+        <div class="si" onclick="openModal('deposit')"><div class="sic">💳</div><div class="stx">Пополнить баланс</div><div class="sv2" id="prof-bal">10.00 USDT</div><div class="sar">›</div></div>
         <div class="si" onclick="openModal('withdraw')"><div class="sic">📤</div><div class="stx">Вывод средств</div><div class="sar">›</div></div>
         <div class="si" onclick="openModal('notify')"><div class="sic">🔔</div><div class="stx">Уведомления</div><div class="sar">›</div></div>
         <div class="si" onclick="toggleDark()"><div class="sic" id="tic">🌙</div><div class="stx">Тёмная тема</div><div class="tog" id="ttog" style="pointer-events:none;"></div></div>
@@ -590,7 +590,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
         <div class="si" onclick="showToast('support@lmoney.app')"><div class="sic">💬</div><div class="stx">Поддержка</div><div class="sar">›</div></div>
       </div>
       <button class="btn bd" onclick="openModal('logout')" style="margin-top:4px;">Выйти из аккаунта</button>
-      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.2 · lmoney.app</div>
+      <div style="text-align:center;padding:10px 0 4px;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;">Lmoney v1.2.3 · lmoney.app</div>
     </div>
 
   </div><!-- /content -->
@@ -618,7 +618,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
 <div class="ov" id="m-withdraw" onclick="if(event.target===this)closeModal('withdraw')">
   <div class="sheet"><div class="sh"></div>
     <div class="st">Вывод средств</div>
-    <div class="ss" id="wd-avail">Доступно: 47.50 USDT · Минимум 5 USDT</div>
+    <div class="ss" id="wd-avail">Доступно: 10.00 USDT · Минимум 5 USDT</div>
     <div class="ntabs"><div class="ntab on" onclick="selNet(this,'trc20')">TRC-20 · Tron</div><div class="ntab" onclick="selNet(this,'ton')">TON Network</div></div>
     <div class="field"><div class="flbl">Адрес кошелька</div><input type="text" id="wd-addr" placeholder="Введите адрес"></div>
     <div class="field"><div class="flbl">Сумма USDT</div><input type="number" id="wd-sum" placeholder="0.00" step="0.01" min="5"></div>
@@ -641,7 +641,7 @@ body{font-family:'Syne',sans-serif;color:var(--text);display:flex;align-items:ce
       <input type="text" id="gift-lmid" placeholder="LM-XXXXX" maxlength="10" style="text-transform:uppercase;font-size:18px;font-weight:700;letter-spacing:1px;">
     </div>
     <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:14px;">Формат: LM-XXXXX · Попросите друга скопировать ID из своего профиля</div>
-    <div class="ibox gold"><div class="ibox-h">💸 Стоимость</div><div class="ibox-b">365 USDT будет списано с вашего баланса. Текущий баланс: 47.50 USDT.</div></div>
+    <div class="ibox gold"><div class="ibox-h">💸 Стоимость</div><div class="ibox-b">365 USDT будет списано с вашего баланса. Текущий баланс: 10.00 USDT.</div></div>
     <button class="btn bp" onclick="sendGift()">Отправить подарок</button>
     <button class="btn bg2" onclick="closeModal('gift')">Отмена</button>
   </div>
@@ -793,7 +793,7 @@ function apiCall(method, path, body) {
 }
 
 // ── STATE ─────────────────────────────────────────────
-var bal = 47.50;
+var bal = 10.00;
 var darkOn = false;
 var autoOn = true;
 var agreed = false;
@@ -842,7 +842,7 @@ function updateStats(n){
 function showUI(name, lmId){
   var pn=document.getElementById('prof-name'); if(pn) pn.textContent=name;
   var pt=document.getElementById('prof-tg');
-  if(pt && tgUser && tgUser.username) pt.textContent='@'+tgUser.username+' \u00b7 ';
+  if(pt && tgUser && tgUser.username) pt.textContent='@'+tgUser.username+' · ';
   var pl=document.getElementById('prof-lmid'); if(pl) pl.textContent=lmId;
   var rl=document.getElementById('ref-link'); if(rl) rl.textContent='lmoney.app/r/'+lmId;
   document.getElementById('auth-screen').classList.add('hide');
@@ -850,7 +850,7 @@ function showUI(name, lmId){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); btn.disabled=false; }
+  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); btn.disabled=false; }
 }
 function loadDraw(){
   apiCall('GET','/draw/current').then(function(r){
@@ -875,7 +875,34 @@ window.toggleAgree = function(){
   var box=document.getElementById('agree-box');
   if(!box) return;
   box.classList.toggle('on', agreed);
-  box.textContent = agreed ? '\u2713' : '';
+  box.textContent = agreed ? '✓' : '';
+};
+
+// ── SILENT AUTO-LOGIN (returning user, no UI changes) ─────
+window.doLoginSilent = function(){
+  var s=getStored();
+  if(!s||!s.agreed) return;
+  var name=(s.nick)||s.name||s.lmId||'';
+  var lmId=s.lmId||genLmId();
+  function finish(ud){
+    if(ud){ bal=parseFloat(ud.balance)||10; name=ud.nick||ud.lm_id||lmId; lmId=ud.lm_id||lmId; }
+    else { bal=10; name=name||lmId; }
+    setStored({agreed:true,lmId:lmId,name:name,tgId:tgUser.id});
+    updateBalUI();
+    showUI(name,lmId);
+    // Fix @username display
+    var pt=document.getElementById('prof-tg');
+    if(pt){ pt.textContent=(tgUser&&tgUser.username)?('@'+tgUser.username+' · '):''; }
+    var pn=document.getElementById('prof-name');
+    if(pn){ pn.textContent=(ud&&ud.nick)?ud.nick:lmId; }
+    loadDraw();
+  }
+  if(tg&&tg.initData&&tg.initData.length>0){
+    apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
+      if(res&&res.token&&res.user){authToken=res.token;localStorage.setItem('lm_token',authToken);finish(res.user);}
+      else{finish(null);}
+    });
+  } else { finish(null); }
 };
 
 // ── LOGIN ─────────────────────────────────────────────
@@ -887,29 +914,39 @@ window.doLogin = function(){
   var btns=document.querySelectorAll('.auth-btn');
   for(var i=0;i<btns.length;i++){ btns[i].disabled=true; btns[i].textContent='Подключаемся...'; }
 
-  var name = (s&&s.nick)||(tgUser&&(tgUser.first_name||tgUser.username))||(s&&s.name)||'Пользователь';
+  // Telegram name - only if they have username
+  var tgName = tgUser ? (tgUser.first_name||null) : null;
   var lmId = (s&&s.lmId)||genLmId();
+  var name = (s&&s.nick)||tgName||lmId; // default = LM-ID, not "Пользователь"
+
+  // Get saved referral
+  var refCode=''; try{ refCode=localStorage.getItem('lm_ref')||''; }catch(e){}
 
   function finish(ud){
-    if(ud){ bal=parseFloat(ud.balance)||bal; name=ud.nick||ud.name||name; lmId=ud.lm_id||lmId; }
-    setStored({agreed:true, lmId:lmId, name:name, tgId:tgUser?tgUser.id:null});
+    if(ud){ bal=parseFloat(ud.balance)||10; lmId=ud.lm_id||lmId; name=(ud.nick)||lmId; }
+    else { bal=10; }
+    setStored({agreed:true,lmId:lmId,name:name,tgId:tgUser?tgUser.id:null});
     updateBalUI();
-    showUI(name, lmId);
-    showToast(isFirst ? 'Добро пожаловать!' : 'С возвращением!');
+    showUI(name,lmId);
+    // @ only if Telegram username exists
+    var pt=document.getElementById('prof-tg');
+    if(pt){ pt.textContent=(tgUser&&tgUser.username)?('@'+tgUser.username+' · '):''; }
+    // Name = nick if set, else LM-ID
+    var pn=document.getElementById('prof-name');
+    if(pn) pn.textContent=name;
+    try{ if(refCode) localStorage.removeItem('lm_ref'); }catch(e){}
+    showToast(isFirst?'Добро пожаловать!':'С возвращением!');
     loadDraw();
   }
 
   if(tg && tg.initData && tg.initData.length > 0){
-    apiCall('POST','/auth',{initData:tg.initData}).then(function(res){
-      if(res && res.token && res.user){
-        authToken=res.token;
-        localStorage.setItem('lm_token',authToken);
-        finish(res.user);
-      } else { finish(null); }
+    var payload={initData:tg.initData};
+    if(refCode) payload.ref=refCode;
+    apiCall('POST','/auth',payload).then(function(res){
+      if(res&&res.token&&res.user){authToken=res.token;localStorage.setItem('lm_token',authToken);finish(res.user);}
+      else{finish(null);}
     });
-  } else {
-    finish(null);
-  }
+  } else { finish(null); }
 };
 
 // ── LOGOUT ────────────────────────────────────────────
@@ -922,7 +959,7 @@ window.doLogout = function(){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); }
+  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); }
   showScr('home');
   showToast('Вы вышли из аккаунта');
 };
@@ -944,7 +981,7 @@ window.showScr = function(name){
 window.toggleDark = function(){
   darkOn=!darkOn;
   document.getElementById('app').classList.toggle('dark',darkOn);
-  var tic=document.getElementById('tic'); if(tic) tic.textContent=darkOn?'\u2600\ufe0f':'\ud83c\udf19';
+  var tic=document.getElementById('tic'); if(tic) tic.textContent=darkOn?'☀️':'🌙';
   var tt=document.getElementById('ttog'); if(tt) tt.classList.toggle('on',darkOn);
 };
 
@@ -971,7 +1008,7 @@ window.closeModal = function(id){
 window.buyTicket = function(){
   if(window.hasTicket){ showToast('Ты уже участвуешь сегодня!'); return; }
   var btn=document.getElementById('buy-btn');
-  btn.textContent='\u23f3 Регистрируем...'; btn.disabled=true;
+  btn.textContent='⏳ Регистрируем...'; btn.disabled=true;
 
   function done(n, nb){
     window.hasTicket=true;
@@ -983,9 +1020,9 @@ window.buyTicket = function(){
     var ts=document.getElementById('tbox-sub'); if(ts) ts.textContent='Баланс: '+bal.toFixed(2)+' USDT';
     document.getElementById('tbox').style.display='flex';
     btn.disabled=false;
-    btn.textContent='\u2713 Ты участвуешь';
+    btn.textContent='✓ Ты участвуешь';
     btn.classList.add('participated');
-    showToast('\ud83c\udf9f Билет #'+n+' зарегистрирован!');
+    showToast('🎟 Билет #'+n+' зарегистрирован!');
   }
 
   apiCall('POST','/ticket/buy').then(function(r){
@@ -994,13 +1031,13 @@ window.buyTicket = function(){
       if(r.draw) updateStats(r.draw.total_tickets);
       done(r.ticket_number, r.new_balance);
     } else if(r && r.error==='Insufficient balance'){
-      btn.textContent='\ud83c\udfaf Участвовать в розыгрыше';
+      btn.textContent='🎯 Участвовать в розыгрыше';
       showToast('Недостаточно средств! Пополни баланс');
       showScr('wallet');
       setTimeout(function(){ openModal('deposit'); }, 400);
     } else if(r && r.error==='Already participating today'){
       window.hasTicket=true;
-      btn.textContent='\u2713 Ты участвуешь';
+      btn.textContent='✓ Ты участвуешь';
       btn.classList.add('participated');
     } else {
       var tc=document.getElementById('tcnt');
@@ -1013,15 +1050,15 @@ window.buyTicket = function(){
 function updateAutoBadge(){
   var b=document.getElementById('auto-badge');
   if(!b) return;
-  if(autoOn){ b.textContent='\u26a1 Авто-участие активно'; b.style.background='rgba(168,208,32,.12)'; b.style.color='var(--accent2)'; b.style.borderColor='rgba(168,208,32,.25)'; }
-  else{ b.textContent='\u25cb Авто-участие выключено'; b.style.background='var(--bg3)'; b.style.color='var(--text3)'; b.style.borderColor='var(--border)'; }
+  if(autoOn){ b.textContent='⚡ Авто-участие активно'; b.style.background='rgba(168,208,32,.12)'; b.style.color='var(--accent2)'; b.style.borderColor='rgba(168,208,32,.25)'; }
+  else{ b.textContent='○ Авто-участие выключено'; b.style.background='var(--bg3)'; b.style.color='var(--text3)'; b.style.borderColor='var(--border)'; }
 }
 window.toggleAuto = function(){
   autoOn=!autoOn;
   document.getElementById('atog').classList.toggle('on',autoOn);
   updateAutoBadge();
   if(autoOn && !window.hasTicket) buyTicket();
-  showToast(autoOn ? '\u26a1 Авто-участие включено' : 'Авто-участие выключено');
+  showToast(autoOn ? '⚡ Авто-участие включено' : 'Авто-участие выключено');
 };
 
 // ── CHIPS ─────────────────────────────────────────────
@@ -1048,7 +1085,7 @@ window.doWithdraw = function(){
   if(!addr){ showToast('Введите адрес кошелька'); return; }
   if(!sum||sum<5){ showToast('Минимальный вывод: 5 USDT'); return; }
   if(sum>bal){ showToast('Недостаточно средств'); return; }
-  showToast('\u2713 Заявка на вывод принята');
+  showToast('✓ Заявка на вывод принята');
   closeModal('withdraw');
 };
 
@@ -1056,19 +1093,19 @@ window.doWithdraw = function(){
 window.cpAddr = function(){
   var a=document.getElementById('dep-addr');
   if(a && navigator.clipboard) navigator.clipboard.writeText(a.textContent).catch(function(){});
-  showToast('\ud83d\udccb Адрес скопирован!');
+  showToast('📋 Адрес скопирован!');
 };
 window.cpRef = function(){
   var rl=document.getElementById('ref-link');
   var link=rl?rl.textContent:'lmoney.app/r/LM-00000';
   if(navigator.clipboard) navigator.clipboard.writeText(link).catch(function(){});
-  showToast('\ud83d\udccb Ссылка скопирована!');
+  showToast('📋 Ссылка скопирована!');
 };
 window.cpLmId = function(){
   var el=document.getElementById('prof-lmid');
   var id=el?el.textContent:'';
   if(navigator.clipboard) navigator.clipboard.writeText(id).catch(function(){});
-  showToast('\ud83d\udccb LM-ID скопирован: '+id);
+  showToast('📋 LM-ID скопирован: '+id);
 };
 
 // ── NICK ──────────────────────────────────────────────
@@ -1084,11 +1121,13 @@ window.saveNick = function(){
   var s=getStored()||{};
   s.nick=val; setStored(s);
   apiCall('PATCH','/me',{nick:val}).then(function(){}).catch(function(){});
+  var lmId=(document.getElementById('prof-lmid')||{}).textContent||s.lmId||'';
+  var displayName=val||lmId; // if no nick, show LM-ID
   var pn=document.getElementById('prof-name');
-  if(pn) pn.textContent=val||s.name||s.lmId||'Пользователь';
+  if(pn) pn.textContent=displayName;
   updateWinnerDisplay(val||null);
   closeModal('editnick');
-  showToast(val?'\u2713 Никнейм: '+val:'\u2713 Отображается LM-номер');
+  showToast(val?'✓ Никнейм: '+val:'✓ Отображается: '+lmId);
 };
 
 // ── GIFT ──────────────────────────────────────────────
@@ -1104,7 +1143,7 @@ window.sendGift = function(){
   var myId=document.getElementById('prof-lmid').textContent;
   if(val===myId){ showToast('Нельзя отправить подарок себе'); return; }
   if(bal<365){ showToast('Недостаточно средств. Нужно 365 USDT'); return; }
-  showToast('\ud83c\udf81 Подарок отправлен на '+val);
+  showToast('🎁 Подарок отправлен на '+val);
   closeModal('gift');
 };
 
@@ -1130,7 +1169,7 @@ window.closeDrawRes = function(){
   window.hasTicket=false;
   document.getElementById('tbox').style.display='none';
   var btn=document.getElementById('buy-btn');
-  if(btn){ btn.textContent='\ud83c\udfaf Участвовать в розыгрыше'; btn.classList.remove('participated'); }
+  if(btn){ btn.textContent='🎯 Участвовать в розыгрыше'; btn.classList.remove('participated'); }
   showScr('home');
 };
 function spawnConfetti(){
@@ -1175,7 +1214,7 @@ function dOff(n){ var d=new Date(); d.setDate(d.getDate()-n); return d; }
   var y1=dOff(1),y2=dOff(2),y3=dOff(3);
   var yl=document.getElementById('yesterday-label'); if(yl) yl.textContent='Победители '+fmtDate(y1);
   [['yd1','#762'],['yd2','#089'],['yd3','#337'],['yd4','#441']].forEach(function(p){
-    var el=document.getElementById(p[0]); if(el) el.textContent=fmtDate(y1)+' \u00b7 '+p[1];
+    var el=document.getElementById(p[0]); if(el) el.textContent=fmtDate(y1)+' · '+p[1];
   });
   var d1=document.getElementById('d-y1'); if(d1) d1.textContent=fmtDate(y1);
   var d2=document.getElementById('d-y2'); if(d2) d2.textContent=fmtDate(y2);
@@ -1202,10 +1241,10 @@ function checkDraw(){
     banner.classList.remove('hide');
     var mm=Math.floor(secs/60).toString().padStart(2,'0');
     var ss=(''+secs%60).padStart(2,'0');
-    if(btxt) btxt.textContent='\ud83c\udfb2 Розыгрыш через '+mm+':'+ss;
+    if(btxt) btxt.textContent='🎲 Розыгрыш через '+mm+':'+ss;
   } else if(secs<=5&&secs>0){
     banner.classList.remove('hide');
-    if(btxt) btxt.textContent='\ud83c\udfb2 Розыгрыш прямо сейчас!';
+    if(btxt) btxt.textContent='🎲 Розыгрыш прямо сейчас!';
   } else if(secs<=0||(now.getUTCHours()===0&&now.getUTCMinutes()===0&&now.getUTCSeconds()<10)){
     banner.classList.add('hide');
     if(window.hasTicket) setTimeout(showDrawResult,1500);
@@ -1216,12 +1255,22 @@ setInterval(checkDraw,1000);
 // ── INIT: check returning user AFTER all functions defined ──
 (function(){
   var s=getStored();
+  // Save referral from URL/Telegram start_param
+  var refCode='';
+  try{
+    var urlP=new URLSearchParams(window.location.search);
+    refCode=urlP.get('ref')||'';
+    if(!refCode && tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param)
+      refCode=tg.initDataUnsafe.start_param||'';
+    if(refCode && refCode.startsWith('LM-')) localStorage.setItem('lm_ref',refCode);
+  }catch(e){}
   if(s && s.agreed){
     var fl=document.getElementById('first-launch-block');
     var rl=document.getElementById('relogin-block');
     if(fl) fl.style.display='none';
     if(rl) rl.style.display='block';
-    if(tgUser){ setTimeout(doLogin, 150); }
+    // Auto-login silently inside Telegram - no button text change
+    if(tgUser) setTimeout(function(){ doLoginSilent(); }, 200);
   }
 })();
 
